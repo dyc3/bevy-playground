@@ -82,6 +82,7 @@ fn add_towers(
 			.insert(towers::Tower {
 				range: 10.0,
 				attack_timer: Timer::from_seconds(1., true),
+				targeting: towers::TowerTargeting::default(),
 			});
 	}
 }
@@ -134,12 +135,21 @@ fn operate_towers(time: Res<Time>,
 	mut enemy: Query<(&mut enemy::Enemy, &Transform), Without<towers::Tower>>,
 ){
 	for mut tower in towers.iter_mut() {
-		let closest_enemy = enemy.iter_mut().min_by(|a, b| {
-			tower.1.translation.distance(a.1.translation).partial_cmp(&tower.1.translation.distance(b.1.translation)).unwrap()
-		});
-		if let Some((enemy, enemy_pos)) = closest_enemy {
-			let mut enemy = enemy; // borrowck workaround
+		let mut enemies_in_range = enemy.iter_mut().filter(|e| tower.1.translation.distance(e.1.translation) < tower.0.range).collect::<Vec<_>>();
+		let target_enemy = match tower.0.targeting {
+			towers::TowerTargeting::First => {
+				enemies_in_range.iter_mut().min_by(|a, b| {
+					a.0.path_pos.partial_cmp(&b.0.path_pos).unwrap()
+				})
+			},
+			towers::TowerTargeting::Closest => {
+				enemies_in_range.iter_mut().min_by(|a, b| {
+					tower.1.translation.distance(a.1.translation).partial_cmp(&tower.1.translation.distance(b.1.translation)).unwrap()
+				})
+			},
+		};
 
+		if let Some((enemy, enemy_pos)) = target_enemy {
 			// make the tower look at the closest enemy
 			if tower.1.translation.distance(enemy_pos.translation) < tower.0.range {
 				tower.1.look_at(enemy_pos.translation, Vec3::new(0.0, 1.0, 0.0));
