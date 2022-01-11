@@ -33,18 +33,20 @@ fn add_towers(
 		base_color: Color::WHITE,
 		..Default::default()
 	});
-	commands.spawn_bundle(
-		PbrBundle {
-			mesh: mesh.clone(),
-			material: material.clone(),
-			transform: Transform::from_xyz(0.0, 3.0, 0.0),
-			..Default::default()
-		}
-	)
-		.insert(towers::Tower {
-			range: 10.0,
-			attack_timer: Timer::from_seconds(0.3, true),
-		});
+	for i in 0..10  {
+		commands.spawn_bundle(
+			PbrBundle {
+				mesh: mesh.clone(),
+				material: material.clone(),
+				transform: Transform::from_xyz(10.0 - (i * 2) as f32, 3.0, 0.0),
+				..Default::default()
+			}
+		)
+			.insert(towers::Tower {
+				range: 10.0,
+				attack_timer: Timer::from_seconds(1., true),
+			});
+	}
 }
 
 fn add_enemies(
