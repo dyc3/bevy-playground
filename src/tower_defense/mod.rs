@@ -43,7 +43,7 @@ fn add_towers(
 	)
 		.insert(towers::Tower {
 			range: 10.0,
-			attack_timer: Timer::from_seconds(1.0, true),
+			attack_timer: Timer::from_seconds(0.3, true),
 		});
 }
 
@@ -57,17 +57,19 @@ fn add_enemies(
 		base_color: Color::PINK,
 		..Default::default()
 	});
-	commands.spawn_bundle(
-		PbrBundle {
-			mesh: mesh.clone(),
-			material: material.clone(),
-			transform: Transform::from_xyz(-20.0, 0.0, 0.0),
-			..Default::default()
-		}
-	)
-		.insert(enemy::Enemy {
-			health: 100,
-		});
+	for i in 0..10  {
+		commands.spawn_bundle(
+			PbrBundle {
+				mesh: mesh.clone(),
+				material: material.clone(),
+				transform: Transform::from_xyz(-20.0 - (i * 3) as f32, 0.0, 0.0),
+				..Default::default()
+			}
+		)
+			.insert(enemy::Enemy {
+				health: 100,
+			});
+	}
 }
 
 fn move_enemies(
@@ -98,14 +100,15 @@ fn operate_towers(time: Res<Time>,
 			// make the tower look at the closest enemy
 			if tower.1.translation.distance(enemy_pos.translation) < tower.0.range {
 				tower.1.look_at(enemy_pos.translation, Vec3::new(0.0, 1.0, 0.0));
+
+				// tower attacks
+				if tower.0.attack_timer.tick(time.delta()).just_finished() {
+					enemy.health -= 10;
+					println!("enemy.health: {}", enemy.health);
+					tower.0.attack_timer.reset();
+				}
 			}
 
-			// tower attacks
-			if tower.0.attack_timer.tick(time.delta()).just_finished() {
-				enemy.health -= 10;
-				println!("enemy.health: {}", enemy.health);
-				tower.0.attack_timer.reset();
-			}
 		}
 	}
 }
