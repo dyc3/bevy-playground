@@ -3,6 +3,7 @@ use bevy::prelude::*;
 #[derive(Component)]
 pub struct Enemy {
 	pub health: u32,
+	pub path_pos: f32,
 }
 
 impl Enemy {
@@ -27,7 +28,7 @@ impl Enemy {
 #[test]
 fn test_enemy_hurt() {
 	// TODO: move to doctest for hurt
-	let mut enemy = Enemy { health: 10 };
+	let mut enemy = Enemy { health: 10, path_pos: 0.0 };
 	enemy.hurt(5);
 	assert_eq!(enemy.health, 5);
 	enemy.hurt(20);

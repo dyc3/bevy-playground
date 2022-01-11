@@ -2,6 +2,7 @@ use bevy::prelude::*;
 
 mod towers;
 mod enemy;
+mod map;
 
 pub struct TowerDefensePlugin;
 
@@ -9,6 +10,7 @@ impl Plugin for TowerDefensePlugin {
 	fn build(&self, app: &mut App) {
 		app
 			.add_startup_system(add_camera)
+			.add_startup_system(add_path)
 			.add_startup_system(add_towers)
 			.add_startup_system(add_enemies)
 			.add_system(move_enemies)
@@ -21,6 +23,41 @@ fn add_camera(mut commands: Commands) {
 		transform: Transform::from_xyz(0.0, 0.0, 20.0),
 		..Default::default()
 	});
+}
+
+fn add_path(
+	mut commands: Commands,
+	mut meshes: ResMut<Assets<Mesh>>,
+	mut materials: ResMut<Assets<StandardMaterial>>,
+) {
+	let path = map::Path::new(vec![
+		Vec3::new(-15.0, 0.0, 0.0),
+		Vec3::new(-5.0, 0.0, 0.0),
+		Vec3::new(-5.0, 0.0, 4.0),
+		Vec3::new(-5.0, -5.0, 5.0),
+		Vec3::new(0.0, 5.0, 5.0),
+		Vec3::new(5.0, 5.0, 5.0),
+		Vec3::new(5.0, 5.0, 0.0),
+		Vec3::new(5.0, 0.0, 0.0),
+		Vec3::new(20.0, 0.0, 0.0),
+	]);
+	let mesh = meshes.add(Mesh::from(shape::Cube { size: 0.25 }));
+	let material = materials.add(StandardMaterial {
+		base_color: Color::WHITE,
+		..Default::default()
+	});
+	for point in path.points() {
+		commands.spawn_bundle(
+			PbrBundle {
+				mesh: mesh.clone(),
+				material: material.clone(),
+				transform: Transform::from_translation(point),
+				..Default::default()
+			}
+		);
+	}
+	commands.spawn()
+		.insert(path);
 }
 
 fn add_towers(
@@ -70,6 +107,7 @@ fn add_enemies(
 		)
 			.insert(enemy::Enemy {
 				health: 100,
+				path_pos: - (i as f32 * 0.1),
 			});
 	}
 }
@@ -77,10 +115,13 @@ fn add_enemies(
 fn move_enemies(
 	mut commands: Commands,
 	time: Res<Time>,
-	mut query: Query<(Entity, &enemy::Enemy, &mut Transform), With<enemy::Enemy>>,
+	mut query: Query<(Entity, &mut enemy::Enemy, &mut Transform), With<enemy::Enemy>>,
+	path: Query<&map::Path>,
 ) {
+	let path = path.single();
 	for mut enemy in query.iter_mut() {
-		enemy.2.translation.x += time.delta().as_secs_f32() * 2.0;
+		enemy.1.path_pos += time.delta().as_secs_f32() * 0.1;
+		enemy.2.translation = path.get_point_along_path(enemy.1.path_pos);
 
 		if enemy.1.health <= 0 {
 			commands.entity(enemy.0).despawn();

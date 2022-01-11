@@ -44,17 +44,15 @@ impl Path {
 	}
 
 	pub fn get_point_along_path(&self, t: f32) -> Vec3 {
-		let mut point = Vec3::default();
 		for i in 0..self.nodes.len() - 1 {
 			let p1 = &self.nodes[i];
 			let p2 = &self.nodes[i + 1];
 			if p1.percent <= t && t <= p2.percent {
 				let t = (t - p1.percent) / (p2.percent - p1.percent);
-				point = p1.point.lerp(p2.point, t);
-				break;
+				return p1.point.lerp(p2.point, t);
 			}
 		}
-		point
+		Vec3::new(-100., 0., 0.)
 	}
 }
 
