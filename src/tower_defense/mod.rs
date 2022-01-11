@@ -152,15 +152,13 @@ fn operate_towers(time: Res<Time>,
 
 		if let Some((enemy, enemy_pos)) = target_enemy {
 			// make the tower look at the closest enemy
-			if tower.1.translation.distance(enemy_pos.translation) < tower.0.range {
-				tower.1.look_at(enemy_pos.translation, Vec3::new(0.0, 1.0, 0.0));
+			tower.1.look_at(enemy_pos.translation, Vec3::new(0.0, 1.0, 0.0));
 
-				// tower attacks
-				if tower.0.attack_timer.tick(time.delta()).just_finished() {
-					enemy.hurt(10);
-					println!("enemy.health: {}", enemy.health);
-					tower.0.attack_timer.reset();
-				}
+			// tower attacks
+			if tower.0.attack_timer.tick(time.delta()).just_finished() {
+				enemy.hurt(10);
+				println!("enemy.health: {}", enemy.health);
+				tower.0.attack_timer.reset();
 			}
 		}
 	}
