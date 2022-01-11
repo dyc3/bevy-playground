@@ -140,7 +140,7 @@ fn operate_towers(time: Res<Time>,
 		let target_enemy = match tower.0.targeting {
 			towers::TowerTargeting::First => {
 				enemies_in_range.iter_mut().min_by(|a, b| {
-					a.0.path_pos.partial_cmp(&b.0.path_pos).unwrap()
+					b.0.path_pos.partial_cmp(&a.0.path_pos).unwrap()
 				})
 			},
 			towers::TowerTargeting::Closest => {
