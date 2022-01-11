@@ -10,6 +10,7 @@ impl Plugin for TowerDefensePlugin {
 	fn build(&self, app: &mut App) {
 		app
 			.add_startup_system(add_camera)
+			.add_startup_system(add_lights)
 			.add_startup_system(add_path)
 			.add_startup_system(add_towers)
 			.add_startup_system(add_enemies)
@@ -21,6 +22,39 @@ impl Plugin for TowerDefensePlugin {
 fn add_camera(mut commands: Commands) {
 	commands.spawn_bundle(PerspectiveCameraBundle {
 		transform: Transform::from_xyz(0.0, 0.0, 20.0),
+		..Default::default()
+	});
+}
+
+fn add_lights(mut commands: Commands) {
+	// ambient light
+	commands.insert_resource(AmbientLight {
+		color: Color::ORANGE_RED,
+		brightness: 0.02,
+	});
+
+	// directional 'sun' light
+	const HALF_SIZE: f32 = 10.0;
+	commands.spawn_bundle(DirectionalLightBundle {
+		directional_light: DirectionalLight {
+			// Configure the projection to better fit the scene
+			shadow_projection: OrthographicProjection {
+				left: -HALF_SIZE,
+				right: HALF_SIZE,
+				bottom: -HALF_SIZE,
+				top: HALF_SIZE,
+				near: -10.0 * HALF_SIZE,
+				far: 10.0 * HALF_SIZE,
+				..Default::default()
+			},
+			shadows_enabled: true,
+			..Default::default()
+		},
+		transform: Transform {
+			translation: Vec3::new(0.0, 2.0, 0.0),
+			rotation: Quat::from_rotation_x(-std::f32::consts::FRAC_PI_4),
+			..Default::default()
+		},
 		..Default::default()
 	});
 }
@@ -71,12 +105,12 @@ fn add_towers(
 		base_color: Color::WHITE,
 		..Default::default()
 	});
-	for i in 0..10  {
+	for i in 0..15  {
 		commands.spawn_bundle(
 			PbrBundle {
 				mesh: mesh.clone(),
 				material: material.clone(),
-				transform: Transform::from_xyz(10.0 - (i * 2) as f32, 3.0, 0.0),
+				transform: Transform::from_xyz(15.0 - (i * 2) as f32, 3.0, 0.0),
 				..Default::default()
 			}
 		)
