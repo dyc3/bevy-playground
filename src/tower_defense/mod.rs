@@ -103,12 +103,11 @@ fn operate_towers(time: Res<Time>,
 
 				// tower attacks
 				if tower.0.attack_timer.tick(time.delta()).just_finished() {
-					enemy.health -= 10;
+					enemy.hurt(10);
 					println!("enemy.health: {}", enemy.health);
 					tower.0.attack_timer.reset();
 				}
 			}
-
 		}
 	}
 }
