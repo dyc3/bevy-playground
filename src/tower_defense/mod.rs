@@ -15,7 +15,7 @@ impl Plugin for TowerDefensePlugin {
 			.add_startup_system(add_towers)
 			.add_startup_system(add_enemies)
 			.add_system(move_enemies)
-			.add_system(operate_towers);
+			.add_system(towers::operate_towers);
 	}
 }
 
