@@ -66,20 +66,28 @@ fn test_enemy_hurt() {
 }
 
 pub(crate) fn move_enemies(
-	mut commands: Commands,
 	time: Res<Time>,
-	mut query: Query<(Entity, &mut Enemy, &mut Transform), With<Enemy>>,
+	mut query: Query<(&mut Enemy, &mut Transform), With<Enemy>>,
 	path: Query<&map::Path>,
 ) {
-	for mut enemy in query.iter_mut() {
+	for enemy in query.iter_mut() {
+		let (mut enemy, mut transform) = enemy;
 		let path = path.iter()
-			.find(|path| path.id == enemy.1.path_id)
-			.expect(format!("No path with id: {}", enemy.1.path_id).as_str());
-		enemy.1.path_pos += time.delta().as_secs_f32() * 0.1;
-		enemy.2.translation = path.get_point_along_path(enemy.1.path_pos);
+			.find(|path| path.id == enemy.path_id)
+			.expect(format!("No path with id: {}", enemy.path_id).as_str());
+		enemy.path_pos += time.delta().as_secs_f32() * 0.1;
+		transform.translation = path.get_point_along_path(enemy.path_pos);
+	}
+}
 
-		if enemy.1.health <= 0 {
-			commands.entity(enemy.0).despawn();
+pub(crate) fn monitor_health(
+	mut commands: Commands,
+	mut query: Query<(Entity, &Enemy), With<Enemy>>,
+) {
+	for enemy in query.iter_mut() {
+		let (entity, enemy) = enemy;
+		if enemy.health <= 0 {
+			commands.entity(entity).despawn();
 		}
 	}
 }

@@ -28,6 +28,7 @@ impl Plugin for TowerDefensePlugin {
 			.add_startup_system(add_enemies)
 			.add_system(waves::spawn_enemies_from_waves)
 			.add_system(enemy::move_enemies)
+			.add_system(enemy::monitor_health)
 			.add_system(towers::operate_towers);
 	}
 }
