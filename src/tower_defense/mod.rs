@@ -92,9 +92,15 @@ fn add_path(
 		Vec3::new(5.0, 0.0, 0.0),
 		Vec3::new(20.0, 0.0, 0.0),
 	]);
-	let mesh = meshes.add(Mesh::from(shape::Cube { size: 0.25 }));
+	let mesh = meshes.add(Mesh::from(shape::UVSphere {
+		radius: 0.2,
+		sectors: 20,
+		stacks: 20,
+	}));
 	let material = materials.add(StandardMaterial {
 		base_color: Color::WHITE,
+		metallic: 1.,
+		perceptual_roughness: 0.5,
 		..Default::default()
 	});
 	for point in path.points() {

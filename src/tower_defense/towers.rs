@@ -48,7 +48,6 @@ pub fn operate_towers(
 			// tower attacks
 			if tower.0.attack_timer.tick(time.delta()).just_finished() {
 				enemy.hurt(10);
-				println!("enemy.health: {}", enemy.health);
 				tower.0.attack_timer.reset();
 			}
 		}
