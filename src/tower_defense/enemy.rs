@@ -1,5 +1,7 @@
 use bevy::prelude::*;
 
+use crate::tower_defense::map;
+
 #[derive(Component, Debug)]
 pub struct Enemy {
 	pub health: u32,
@@ -61,4 +63,23 @@ fn test_enemy_hurt() {
 	assert_eq!(enemy.health, 5);
 	enemy.hurt(20);
 	assert_eq!(enemy.health, 0);
+}
+
+pub(crate) fn move_enemies(
+	mut commands: Commands,
+	time: Res<Time>,
+	mut query: Query<(Entity, &mut Enemy, &mut Transform), With<Enemy>>,
+	path: Query<&map::Path>,
+) {
+	for mut enemy in query.iter_mut() {
+		let path = path.iter()
+			.find(|path| path.id == enemy.1.path_id)
+			.expect(format!("No path with id: {}", enemy.1.path_id).as_str());
+		enemy.1.path_pos += time.delta().as_secs_f32() * 0.1;
+		enemy.2.translation = path.get_point_along_path(enemy.1.path_pos);
+
+		if enemy.1.health <= 0 {
+			commands.entity(enemy.0).despawn();
+		}
+	}
 }

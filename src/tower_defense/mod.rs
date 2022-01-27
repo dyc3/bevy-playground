@@ -27,7 +27,7 @@ impl Plugin for TowerDefensePlugin {
 			.add_startup_system(add_towers)
 			.add_startup_system(add_enemies)
 			.add_system(waves::spawn_enemies_from_waves)
-			.add_system(move_enemies)
+			.add_system(enemy::move_enemies)
 			.add_system(towers::operate_towers);
 	}
 }
@@ -161,24 +161,5 @@ fn add_enemies(
 				path_id: 0,
 				path_pos: - (i as f32 * 0.1),
 			});
-	}
-}
-
-fn move_enemies(
-	mut commands: Commands,
-	time: Res<Time>,
-	mut query: Query<(Entity, &mut enemy::Enemy, &mut Transform), With<enemy::Enemy>>,
-	path: Query<&map::Path>,
-) {
-	for mut enemy in query.iter_mut() {
-		let path = path.iter()
-			.find(|path| path.id == enemy.1.path_id)
-			.expect(format!("No path with id: {}", enemy.1.path_id).as_str());
-		enemy.1.path_pos += time.delta().as_secs_f32() * 0.1;
-		enemy.2.translation = path.get_point_along_path(enemy.1.path_pos);
-
-		if enemy.1.health <= 0 {
-			commands.entity(enemy.0).despawn();
-		}
 	}
 }
