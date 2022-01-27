@@ -5,11 +5,21 @@ use crate::tower_defense::map;
 #[derive(Component, Debug)]
 pub struct Enemy {
 	pub health: u32,
+	pub max_health: u32,
 	pub path_id: u64,
 	pub path_pos: f32,
 }
 
 impl Enemy {
+	pub fn new(max_health: u32, path_id: u64, path_pos: f32) -> Enemy {
+		Enemy {
+			health: max_health,
+			max_health,
+			path_id,
+			path_pos,
+		}
+	}
+
 	/// Hurt the enemy for the given amount of damage.
 	///
 	/// ```
@@ -49,16 +59,16 @@ impl Enemy {
 		)
 			.insert(self);
 	}
+
+	pub fn health_percent(&self) -> f32 {
+		self.health as f32 / self.max_health as f32
+	}
 }
 
 #[test]
 fn test_enemy_hurt() {
 	// TODO: move to doctest for hurt
-	let mut enemy = Enemy {
-		health: 10,
-		path_id: 0,
-		path_pos: 0.0
-	};
+	let mut enemy = Enemy::new(10, 0, 0.);
 	enemy.hurt(5);
 	assert_eq!(enemy.health, 5);
 	enemy.hurt(20);
@@ -82,10 +92,14 @@ pub(crate) fn move_enemies(
 
 pub(crate) fn monitor_health(
 	mut commands: Commands,
-	mut query: Query<(Entity, &Enemy), With<Enemy>>,
+	mut query: Query<(Entity, &Enemy, &Handle<StandardMaterial>), With<Enemy>>,
+	mut materials: ResMut<Assets<StandardMaterial>>
 ) {
 	for enemy in query.iter_mut() {
-		let (entity, enemy) = enemy;
+		let (entity, enemy, material_handle) = enemy;
+		let mat = materials.get_mut(material_handle).expect("no material found");
+		// FIXME: changes color for all enemies that share this material instead of just this one. maybe I have to do some shader stuff?
+		mat.base_color = Color::from(Vec4::from(Color::WHITE).lerp(Vec4::from(Color::RED), enemy.health_percent()));
 		if enemy.health <= 0 {
 			commands.entity(entity).despawn();
 		}

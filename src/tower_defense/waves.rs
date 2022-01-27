@@ -99,11 +99,11 @@ pub fn spawn_enemies_from_waves(
 				let wave = wave_manager.current_wave_mut();
 				if wave.stage.spawned < wave.stage.enemy_count {
 					wave.stage.spawned += 1;
-					let enemy = Enemy {
-						health: 100,
-						path_id: 0,
-						path_pos: 0.,
-					};
+					let enemy = Enemy::new(
+						100,
+						0,
+						0.,
+					);
 					enemy.spawn(commands, meshes, materials);
 				} else {
 					// TODO: check to see if all enemies are dead

@@ -144,11 +144,11 @@ fn add_enemies(
 	mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
 	let mesh = meshes.add(Mesh::from(shape::Cube { size: 1.0 }));
-	let material = materials.add(StandardMaterial {
-		base_color: Color::PINK,
-		..Default::default()
-	});
 	for i in 0..10  {
+		let material = materials.add(StandardMaterial {
+			base_color: Color::PINK,
+			..Default::default()
+		});
 		commands.spawn_bundle(
 			PbrBundle {
 				mesh: mesh.clone(),
@@ -157,10 +157,10 @@ fn add_enemies(
 				..Default::default()
 			}
 		)
-			.insert(enemy::Enemy {
-				health: 100,
-				path_id: 0,
-				path_pos: - (i as f32 * 0.1),
-			});
+			.insert(enemy::Enemy::new(
+				100,
+				0,
+				- (i as f32 * 0.1)),
+			);
 	}
 }
