@@ -112,6 +112,7 @@ pub fn spawn_enemies_from_waves(
 			}
 		}
 		WaveStatus::Finished => {
+			println!("Wave complete");
 			wave_manager.current_wave += 1;
 			wave_manager.wave_status = WaveStatus::Pending;
 		}
