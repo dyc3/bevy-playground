@@ -76,7 +76,9 @@ fn add_path(
 	mut meshes: ResMut<Assets<Mesh>>,
 	mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-	let path = map::Path::new(vec![
+	let path = map::Path::new(
+		0,
+		vec![
 		Vec3::new(-15.0, 0.0, 0.0),
 		Vec3::new(-5.0, 0.0, 0.0),
 		Vec3::new(-5.0, 0.0, 4.0),
