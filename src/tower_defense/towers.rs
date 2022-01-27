@@ -1,5 +1,7 @@
 use bevy::prelude::*;
 
+use crate::tower_defense::enemy;
+
 #[derive(Component)]
 pub struct Tower {
 	pub range: f32,

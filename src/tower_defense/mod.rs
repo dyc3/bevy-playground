@@ -4,16 +4,28 @@ mod towers;
 mod enemy;
 mod map;
 
+use crate::tower_defense::enemy::{Wave, WaveManager, WaveStage};
+
 pub struct TowerDefensePlugin;
 
 impl Plugin for TowerDefensePlugin {
 	fn build(&self, app: &mut App) {
 		app
+			.insert_resource(
+				WaveManager::new(
+					vec![
+						Wave {
+							stage: WaveStage::new(10, 0.5),
+						}
+					],
+				)
+			)
 			.add_startup_system(add_camera)
 			.add_startup_system(add_lights)
 			.add_startup_system(add_path)
 			.add_startup_system(add_towers)
 			.add_startup_system(add_enemies)
+			.add_system(enemy::spawn_enemies_from_waves)
 			.add_system(move_enemies)
 			.add_system(towers::operate_towers);
 	}
@@ -161,39 +173,6 @@ fn move_enemies(
 
 		if enemy.1.health <= 0 {
 			commands.entity(enemy.0).despawn();
-		}
-	}
-}
-
-fn operate_towers(time: Res<Time>,
-	mut towers: Query<(&mut towers::Tower, &mut Transform)>,
-	mut enemy: Query<(&mut enemy::Enemy, &Transform), Without<towers::Tower>>,
-){
-	for mut tower in towers.iter_mut() {
-		let mut enemies_in_range = enemy.iter_mut().filter(|e| tower.1.translation.distance(e.1.translation) < tower.0.range).collect::<Vec<_>>();
-		let target_enemy = match tower.0.targeting {
-			towers::TowerTargeting::First => {
-				enemies_in_range.iter_mut().min_by(|a, b| {
-					b.0.path_pos.partial_cmp(&a.0.path_pos).unwrap()
-				})
-			},
-			towers::TowerTargeting::Closest => {
-				enemies_in_range.iter_mut().min_by(|a, b| {
-					tower.1.translation.distance(a.1.translation).partial_cmp(&tower.1.translation.distance(b.1.translation)).unwrap()
-				})
-			},
-		};
-
-		if let Some((enemy, enemy_pos)) = target_enemy {
-			// make the tower look at the closest enemy
-			tower.1.look_at(enemy_pos.translation, Vec3::new(0.0, 1.0, 0.0));
-
-			// tower attacks
-			if tower.0.attack_timer.tick(time.delta()).just_finished() {
-				enemy.hurt(10);
-				println!("enemy.health: {}", enemy.health);
-				tower.0.attack_timer.reset();
-			}
 		}
 	}
 }
