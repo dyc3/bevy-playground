@@ -3,8 +3,9 @@ use bevy::prelude::*;
 mod towers;
 mod enemy;
 mod map;
+mod waves;
 
-use crate::tower_defense::enemy::{Wave, WaveManager, WaveStage};
+use crate::tower_defense::waves::{Wave, WaveManager, WaveStage};
 
 pub struct TowerDefensePlugin;
 
@@ -25,7 +26,7 @@ impl Plugin for TowerDefensePlugin {
 			.add_startup_system(add_path)
 			.add_startup_system(add_towers)
 			.add_startup_system(add_enemies)
-			.add_system(enemy::spawn_enemies_from_waves)
+			.add_system(waves::spawn_enemies_from_waves)
 			.add_system(move_enemies)
 			.add_system(towers::operate_towers);
 	}
