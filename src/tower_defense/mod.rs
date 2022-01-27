@@ -25,7 +25,7 @@ impl Plugin for TowerDefensePlugin {
 			.add_startup_system(add_lights)
 			.add_startup_system(add_path)
 			.add_startup_system(add_towers)
-			.add_startup_system(add_enemies)
+			// .add_startup_system(add_enemies)
 			.add_system(waves::spawn_enemies_from_waves)
 			.add_system(enemy::move_enemies)
 			.add_system(enemy::monitor_health)
@@ -135,32 +135,5 @@ fn add_towers(
 				attack_timer: Timer::from_seconds(1., true),
 				targeting: towers::TowerTargeting::default(),
 			});
-	}
-}
-
-fn add_enemies(
-	mut commands: Commands,
-	mut meshes: ResMut<Assets<Mesh>>,
-	mut materials: ResMut<Assets<StandardMaterial>>,
-) {
-	let mesh = meshes.add(Mesh::from(shape::Cube { size: 1.0 }));
-	for i in 0..10  {
-		let material = materials.add(StandardMaterial {
-			base_color: Color::PINK,
-			..Default::default()
-		});
-		commands.spawn_bundle(
-			PbrBundle {
-				mesh: mesh.clone(),
-				material: material.clone(),
-				transform: Transform::from_xyz(-20.0 - (i * 3) as f32, 0.0, 0.0),
-				..Default::default()
-			}
-		)
-			.insert(enemy::Enemy::new(
-				100,
-				0,
-				- (i as f32 * 0.1)),
-			);
 	}
 }
