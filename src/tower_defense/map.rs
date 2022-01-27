@@ -2,7 +2,7 @@ use bevy::prelude::*;
 
 #[derive(Component)]
 pub struct Path {
-	id: u64,
+	pub id: u64,
 	nodes: Vec<PathNode>,
 }
 

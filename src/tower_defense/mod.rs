@@ -157,6 +157,7 @@ fn add_enemies(
 		)
 			.insert(enemy::Enemy {
 				health: 100,
+				path_id: 0,
 				path_pos: - (i as f32 * 0.1),
 			});
 	}
@@ -168,8 +169,10 @@ fn move_enemies(
 	mut query: Query<(Entity, &mut enemy::Enemy, &mut Transform), With<enemy::Enemy>>,
 	path: Query<&map::Path>,
 ) {
-	let path = path.single();
 	for mut enemy in query.iter_mut() {
+		let path = path.iter()
+			.find(|path| path.id == enemy.1.path_id)
+			.expect(format!("No path with id: {}", enemy.1.path_id).as_str());
 		enemy.1.path_pos += time.delta().as_secs_f32() * 0.1;
 		enemy.2.translation = path.get_point_along_path(enemy.1.path_pos);
 

@@ -3,6 +3,7 @@ use bevy::prelude::*;
 #[derive(Component, Debug)]
 pub struct Enemy {
 	pub health: u32,
+	pub path_id: u64,
 	pub path_pos: f32,
 }
 
@@ -51,7 +52,11 @@ impl Enemy {
 #[test]
 fn test_enemy_hurt() {
 	// TODO: move to doctest for hurt
-	let mut enemy = Enemy { health: 10, path_pos: 0.0 };
+	let mut enemy = Enemy {
+		health: 10,
+		path_id: 0,
+		path_pos: 0.0
+	};
 	enemy.hurt(5);
 	assert_eq!(enemy.health, 5);
 	enemy.hurt(20);
@@ -157,7 +162,8 @@ pub fn spawn_enemies_from_waves(
 					wave.stage.spawned += 1;
 					let enemy = Enemy {
 						health: 100,
-						path_pos: 0.
+						path_id: 0,
+						path_pos: 0.,
 					};
 					enemy.spawn(commands, meshes, materials);
 				} else {
