@@ -43,14 +43,14 @@ pub struct WaveStage {
 }
 
 impl Default for WaveStage {
-    fn default() -> Self {
-        Self {
+	fn default() -> Self {
+		Self {
 			enemy_count: Default::default(),
 			spawn_rate: 0.5,
 
 			spawned: 0,
 		}
-    }
+	}
 }
 
 impl WaveStage {
