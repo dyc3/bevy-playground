@@ -2,21 +2,31 @@ use bevy::prelude::*;
 
 use crate::tower_defense::map;
 
+#[derive(Debug, Clone, Copy)]
+pub struct EnemyCreateOptions {
+	pub health: u32,
+	pub speed: f32,
+	pub path_id: u64,
+}
+
 #[derive(Component, Debug)]
 pub struct Enemy {
 	pub health: u32,
 	pub max_health: u32,
 	pub path_id: u64,
 	pub path_pos: f32,
+	/// Speed that the enemy travels in units per second.
+	pub speed: f32,
 }
 
 impl Enemy {
-	pub fn new(max_health: u32, path_id: u64, path_pos: f32) -> Enemy {
-		Enemy {
-			health: max_health,
-			max_health,
-			path_id,
-			path_pos,
+	pub fn new(options: EnemyCreateOptions) -> Self {
+		Self {
+			health: options.health,
+			max_health: options.health,
+			path_id: options.path_id,
+			path_pos: 0.,
+			speed: options.speed,
 		}
 	}
 
@@ -68,7 +78,11 @@ impl Enemy {
 #[test]
 fn test_enemy_hurt() {
 	// TODO: move to doctest for hurt
-	let mut enemy = Enemy::new(10, 0, 0.);
+	let mut enemy = Enemy::new(EnemyCreateOptions {
+		health: 10,
+		speed: 1.,
+		path_id: 0,
+	});
 	enemy.hurt(5);
 	assert_eq!(enemy.health, 5);
 	enemy.hurt(20);

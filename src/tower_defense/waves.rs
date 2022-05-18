@@ -2,6 +2,8 @@ use bevy::prelude::*;
 
 use crate::tower_defense::enemy::Enemy;
 
+use super::enemy::EnemyCreateOptions;
+
 #[derive(Component)]
 pub struct WaveManager {
 	pub waves: Vec<Wave>,
@@ -114,11 +116,11 @@ pub fn spawn_enemies_from_waves(
 				let wave = wave_manager.current_wave_mut();
 				if wave.stage.spawned < wave.stage.enemy_count {
 					wave.stage.spawned += 1;
-					let enemy = Enemy::new(
-						100,
-						0,
-						0.,
-					);
+					let enemy = Enemy::new(EnemyCreateOptions {
+						health: 100,
+						speed: 1.0,
+						path_id: 0,
+					});
 					enemy.spawn(commands, meshes, materials);
 				} else {
 					wave_manager.set_wave_status(WaveStatus::WaitingForEnemiesToDie);
