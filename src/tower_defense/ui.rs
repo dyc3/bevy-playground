@@ -30,7 +30,7 @@ pub(crate) fn setup_ui(mut commands: Commands, asset_server: Res<AssetServer>) {
 						style: TextStyle {
 							font: asset_server.load("fonts/Hack-Regular.ttf"),
 							font_size: 60.0,
-							color: Color::GOLD,
+							color: Color::WHITE,
 						},
 					},
 				],
@@ -47,10 +47,13 @@ pub(crate) fn update_wave_text(wave_manager: Res<super::waves::WaveManager>, mut
 		text.sections[1].value = format!("{} / {}", wave_manager.current_wave_num(), wave_manager.waves.len());
 		match wave_manager.wave_status() {
 			WaveStatus::Pending => {
-				text.sections[1].style.color = Color::GOLD;
+				text.sections[1].style.color = Color::WHITE;
 			}
 			WaveStatus::InProgress => {
-				text.sections[1].style.color = Color::WHITE;
+				text.sections[1].style.color = Color::GOLD;
+			}
+			WaveStatus::WaitingForEnemiesToDie => {
+				text.sections[1].style.color = Color::ORANGE_RED;
 			}
 			WaveStatus::Finished => {
 				text.sections[1].style.color = Color::GREEN;

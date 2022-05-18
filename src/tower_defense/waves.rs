@@ -35,6 +35,11 @@ impl WaveManager {
 	pub fn current_wave_mut(&mut self) -> &mut Wave {
 		&mut self.waves[self.current_wave_index]
 	}
+
+	fn set_wave_status(&mut self, wave_status: WaveStatus) {
+		info!("Wave status changed: {:?} => {:?}", self.wave_status(), wave_status);
+		self.wave_status = wave_status;
+	}
 }
 
 #[derive(Debug)]
@@ -76,6 +81,7 @@ impl WaveStage {
 pub enum WaveStatus {
 	Pending,
 	InProgress,
+	WaitingForEnemiesToDie,
 	Finished,
 }
 
@@ -86,6 +92,7 @@ pub fn spawn_enemies_from_waves(
 	mut commands: Commands,
 	mut meshes: ResMut<Assets<Mesh>>,
 	mut materials: ResMut<Assets<StandardMaterial>>,
+	mut enemies: Query<(Entity, &Enemy), With<Enemy>>,
 ) {
 	if wave_manager.current_wave_index >= wave_manager.waves.len() {
 		return;
@@ -95,10 +102,10 @@ pub fn spawn_enemies_from_waves(
 		WaveStatus::Pending => {
 			if keyboard_input.pressed(KeyCode::Space) {
 				println!("Starting wave {}", wave_manager.current_wave_index);
-				wave_manager.wave_status = WaveStatus::InProgress;
 				wave_manager.enemy_spawn_timer = Timer::from_seconds(
 					wave_manager.current_wave().stage.spawn_rate, true
 				);
+				wave_manager.set_wave_status(WaveStatus::InProgress);
 			}
 		}
 		WaveStatus::InProgress => {
@@ -114,15 +121,19 @@ pub fn spawn_enemies_from_waves(
 					);
 					enemy.spawn(commands, meshes, materials);
 				} else {
-					// TODO: check to see if all enemies are dead
-					wave_manager.wave_status = WaveStatus::Finished;
+					wave_manager.set_wave_status(WaveStatus::WaitingForEnemiesToDie);
 				}
+			}
+		}
+		WaveStatus::WaitingForEnemiesToDie => {
+			if enemies.iter().count() == 0 {
+				wave_manager.set_wave_status(WaveStatus::Finished);
 			}
 		}
 		WaveStatus::Finished => {
 			println!("Wave complete");
 			wave_manager.current_wave_index += 1;
-			wave_manager.wave_status = WaveStatus::Pending;
+			wave_manager.set_wave_status(WaveStatus::Pending);
 		}
 	}
 }
