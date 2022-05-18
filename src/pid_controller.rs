@@ -134,7 +134,7 @@ impl<T, const I: u64> PidControlled<T, I> where
 	}
 }
 
-const PID_CONTROL_POSITION: u64 = 0;
+pub const PID_CONTROL_POSITION: u64 = 0;
 
 pub fn system_pid_controller_position(
 	time: Res<Time>,

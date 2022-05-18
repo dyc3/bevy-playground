@@ -1,6 +1,8 @@
 use bevy::prelude::*;
 
-use crate::{tower_defense::map, pid_controller::PidControlledPosition};
+use crate::{tower_defense::map, pid_controller::{PidControlledPosition, self, PidControlled}};
+
+pub const PID_CONTROL_POSITION: u64 = 0;
 
 #[derive(Debug, Clone, Copy)]
 pub struct EnemyCreateOptions {
@@ -67,7 +69,7 @@ impl Enemy {
 				..Default::default()
 			}
 		)
-			.insert(PidControlledPosition::new(1., 1., 1.))
+			.insert(PidControlled::<Vec3, PID_CONTROL_POSITION>::new(1., 1., 1.))
 			.insert(self);
 	}
 
@@ -109,7 +111,7 @@ pub(crate) fn move_enemies(
 #[allow(dead_code)]
 pub(crate) fn move_enemies_with_pid(
 	time: Res<Time>,
-	mut query: Query<(&mut Enemy, &mut PidControlledPosition), With<Enemy>>,
+	mut query: Query<(&mut Enemy, &mut PidControlled<Vec3, PID_CONTROL_POSITION>), With<Enemy>>,
 	path: Query<&map::Path>,
 ) {
 	for enemy in query.iter_mut() {
