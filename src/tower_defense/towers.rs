@@ -16,9 +16,9 @@ pub enum TowerTargeting {
 }
 
 impl Default for TowerTargeting {
-    fn default() -> Self {
-        TowerTargeting::First
-    }
+	fn default() -> Self {
+		TowerTargeting::First
+	}
 }
 
 pub fn operate_towers(
