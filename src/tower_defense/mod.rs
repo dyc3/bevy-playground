@@ -17,8 +17,11 @@ impl Plugin for TowerDefensePlugin {
 				WaveManager::new(
 					vec![
 						Wave {
+							stage: WaveStage::new(5, 0.25),
+						},
+						Wave {
 							stage: WaveStage::new(10, 0.5),
-						}
+						},
 					],
 				)
 			)
