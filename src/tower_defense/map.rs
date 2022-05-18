@@ -11,14 +11,17 @@ struct PathNode {
 	pub(crate) point: Vec3,
 	/// At what percent of the path is this point
 	pub(crate) percent: f32,
+	/// How far away is this point from the start of the path
+	pub(crate) distance: f32,
 }
 
 impl Path {
 	pub fn new(id: u64, points: Vec<Vec3>) -> Self {
 		let mut path = Path {
 			id,
-			nodes: points.into_iter().map(|point| PathNode { point, percent: 0.0 }).collect()
+			nodes: points.into_iter().map(|point| PathNode { point, percent: 0.0, distance: 0.0 }).collect()
 		};
+		path.update_distances();
 		path.update_path_percents();
 		path
 	}
@@ -27,19 +30,22 @@ impl Path {
 		self.nodes.iter().map(|node| node.point).collect()
 	}
 
+	/// Total length of the path
 	pub fn total_length(&self) -> f32 {
-		let mut total_length = 0.0;
-		for i in 0..self.nodes.len() - 1 {
-			total_length += self.nodes[i].point.distance(self.nodes[i + 1].point);
+		self.nodes.last().map(|node| node.distance).unwrap_or(0.0)
+	}
+
+	fn update_distances(&mut self) {
+		for i in 1..self.nodes.len() {
+			self.nodes[i].distance = self.nodes[i - 1].distance + self.nodes[i - 1].point.distance(self.nodes[i].point);
 		}
-		total_length
 	}
 
 	fn update_path_percents(&mut self) {
 		let total_length = self.total_length();
 		let mut dist_sum: f32 = 0.;
 		for i in 0..self.nodes.len() - 1 {
-			let distance = self.nodes[i].point.distance(self.nodes[i + 1].point);
+			let distance = self.nodes[i + 1].distance - self.nodes[i].distance;
 			self.nodes[i].percent = dist_sum / total_length;
 			dist_sum += distance;
 		}
@@ -47,6 +53,7 @@ impl Path {
 		self.nodes[len - 1].percent = 1.0;
 	}
 
+	/// Returns the point on the path at the given percent.
 	pub fn get_point_along_path(&self, t: f32) -> Vec3 {
 		for i in 0..self.nodes.len() - 1 {
 			let p1 = &self.nodes[i];
@@ -70,6 +77,18 @@ fn test_total_length() {
 		Vec3::new(30.0, 0.0, 0.0),
 	]);
 	assert_eq!(path.total_length(), 30.);
+}
+
+#[test]
+fn test_total_length_2() {
+	let path = Path::new(
+		0,
+		vec![
+		Vec3::new(0.0, 0.0, 0.0),
+		Vec3::new(10.0, 0.0, 0.0),
+		Vec3::new(10.0, 30.0, 0.0),
+	]);
+	assert_eq!(path.total_length(), 40.);
 }
 
 #[test]
