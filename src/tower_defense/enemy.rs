@@ -69,7 +69,7 @@ impl Enemy {
 				..Default::default()
 			}
 		)
-			.insert(PidControlled::<Vec3, PID_CONTROL_POSITION>::new(1., 1., 1.))
+			// .insert(PidControlled::<Vec3, PID_CONTROL_POSITION>::new(1., 1., 1.))
 			.insert(self);
 	}
 
