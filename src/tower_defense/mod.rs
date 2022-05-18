@@ -8,6 +8,8 @@ mod waves;
 
 use crate::tower_defense::waves::{Wave, WaveManager, WaveStage};
 
+use self::enemy::EnemyCreateOptions;
+
 pub struct TowerDefensePlugin;
 
 impl Plugin for TowerDefensePlugin {
@@ -17,10 +19,18 @@ impl Plugin for TowerDefensePlugin {
 				WaveManager::new(
 					vec![
 						Wave {
-							stage: WaveStage::new(5, 0.25),
+							stage: WaveStage::new(5, 0.25, EnemyCreateOptions {
+								health: 50,
+								speed: 5.,
+								path_id: 0,
+							}),
 						},
 						Wave {
-							stage: WaveStage::new(10, 0.5),
+							stage: WaveStage::new(10, 0.5, EnemyCreateOptions {
+								health: 100,
+								speed: 3.,
+								path_id: 0,
+							}),
 						},
 					],
 				)

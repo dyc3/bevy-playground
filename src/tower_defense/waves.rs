@@ -53,6 +53,7 @@ pub struct Wave {
 pub struct WaveStage {
 	pub enemy_count: u32,
 	pub spawn_rate: f32,
+	pub enemy_create_options: EnemyCreateOptions,
 
 	spawned: u32,
 }
@@ -62,6 +63,11 @@ impl Default for WaveStage {
 		Self {
 			enemy_count: Default::default(),
 			spawn_rate: 0.5,
+			enemy_create_options: EnemyCreateOptions {
+				health: 10,
+				speed: 3.0,
+				path_id: 0,
+			},
 
 			spawned: 0,
 		}
@@ -69,10 +75,11 @@ impl Default for WaveStage {
 }
 
 impl WaveStage {
-	pub fn new(enemy_count: u32, spawn_rate: f32) -> Self {
+	pub fn new(enemy_count: u32, spawn_rate: f32, enemy_create_options: EnemyCreateOptions) -> Self {
 		Self {
 			enemy_count,
 			spawn_rate,
+			enemy_create_options,
 
 			spawned: 0,
 		}
@@ -116,11 +123,7 @@ pub fn spawn_enemies_from_waves(
 				let wave = wave_manager.current_wave_mut();
 				if wave.stage.spawned < wave.stage.enemy_count {
 					wave.stage.spawned += 1;
-					let enemy = Enemy::new(EnemyCreateOptions {
-						health: 100,
-						speed: 1.0,
-						path_id: 0,
-					});
+					let enemy = Enemy::new(wave.stage.enemy_create_options);
 					enemy.spawn(commands, meshes, materials);
 				} else {
 					wave_manager.set_wave_status(WaveStatus::WaitingForEnemiesToDie);
