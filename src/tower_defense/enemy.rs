@@ -99,7 +99,7 @@ pub(crate) fn move_enemies(
 		let path = path.iter()
 			.find(|path| path.id == enemy.path_id)
 			.expect(format!("No path with id: {}", enemy.path_id).as_str());
-		enemy.path_pos += time.delta().as_secs_f32() * 0.1;
+		enemy.path_pos += enemy.speed * time.delta().as_secs_f32();
 		transform.translation = path.get_point_along_path(enemy.path_pos);
 	}
 }
