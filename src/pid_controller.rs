@@ -74,9 +74,13 @@ pub fn system(
 /// The controller is configured with a set of gains. The controller will attempt to maintain a
 /// target value by adjusting the output of the controlled system.
 ///
+/// `T` is the type of the value being controlled, and `I` is a constant that is used to indicate what the value controls.
+/// `I` is not used in the computation of the controller, but is used to indicate to the programmer what the value controls (eg. "position"),
+/// and so that you can use `PidControlled` to control any component value.
+///
 /// see: https://en.wikipedia.org/wiki/PID_controller
 #[derive(Component, Debug)]
-pub struct PidControlled<T> {
+pub struct PidControlled<T, const I: u64> {
 	pub proportional_gain: f32,
 	pub integral_gain: f32,
 	pub derivative_gain: f32,
@@ -89,10 +93,10 @@ pub struct PidControlled<T> {
 	derivative_initialized: bool,
 }
 
-unsafe impl<T> Send for PidControlled<T> {}
-unsafe impl<T> Sync for PidControlled<T> {}
+unsafe impl<T, const I: u64> Send for PidControlled<T, I> {}
+unsafe impl<T, const I: u64> Sync for PidControlled<T, I> {}
 
-impl<T> PidControlled<T> where
+impl<T, const I: u64> PidControlled<T, I> where
 	T: Default + Copy + Sync + Send + Add<Output = T> + Sub<Output = T> + Mul<Output = T> + Mul<f32, Output = T> + Div<Output = T> + Div<f32, Output = T> {
 	pub fn new(proportional_gain: f32, integral_gain: f32, derivative_gain: f32) -> Self {
 		Self {
@@ -130,10 +134,12 @@ impl<T> PidControlled<T> where
 	}
 }
 
-pub fn system_generic<T: 'static>(
+const PID_CONTROL_POSITION: u64 = 0;
+
+pub fn system_pid_controller_position(
 	time: Res<Time>,
-	mut controllers: Query<(&mut PidControlled<T>, &mut Transform)>,
-) where T: Default + Copy + Sync + Send + Add<Output = T> + Sub<Output = T> + Mul<Output = T> + Mul<f32, Output = T> + Div<Output = T> + Div<f32, Output = T> {
+	mut controllers: Query<(&mut PidControlled<Vec3, PID_CONTROL_POSITION>, &mut Transform)>,
+) {
 	for (mut controller, mut transform) in controllers.iter_mut() {
 		let output = controller.compute(time.delta_seconds(), transform.translation);
 		transform.translation += output;
