@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::tower_defense::map;
+use crate::{tower_defense::map, pid_controller::PidControlledPosition};
 
 #[derive(Debug, Clone, Copy)]
 pub struct EnemyCreateOptions {
@@ -63,10 +63,11 @@ impl Enemy {
 			PbrBundle {
 				mesh: mesh.clone(),
 				material: material.clone(),
-				transform: Transform::from_xyz(-10000., 10000., 0.),
+				transform: Transform::from_xyz(-0., 0., 0.),
 				..Default::default()
 			}
 		)
+			.insert(PidControlledPosition::new(1., 1., 1.))
 			.insert(self);
 	}
 
@@ -89,6 +90,7 @@ fn test_enemy_hurt() {
 	assert_eq!(enemy.health, 0);
 }
 
+#[allow(dead_code)]
 pub(crate) fn move_enemies(
 	time: Res<Time>,
 	mut query: Query<(&mut Enemy, &mut Transform), With<Enemy>>,
@@ -101,6 +103,22 @@ pub(crate) fn move_enemies(
 			.expect(format!("No path with id: {}", enemy.path_id).as_str());
 		enemy.path_pos += enemy.speed * time.delta().as_secs_f32();
 		transform.translation = path.get_point_along_path(enemy.path_pos);
+	}
+}
+
+#[allow(dead_code)]
+pub(crate) fn move_enemies_with_pid(
+	time: Res<Time>,
+	mut query: Query<(&mut Enemy, &mut PidControlledPosition), With<Enemy>>,
+	path: Query<&map::Path>,
+) {
+	for enemy in query.iter_mut() {
+		let (mut enemy, mut transform) = enemy;
+		let path = path.iter()
+			.find(|path| path.id == enemy.path_id)
+			.expect(format!("No path with id: {}", enemy.path_id).as_str());
+		enemy.path_pos += enemy.speed * time.delta().as_secs_f32();
+		transform.set_target(path.get_point_along_path(enemy.path_pos));
 	}
 }
 

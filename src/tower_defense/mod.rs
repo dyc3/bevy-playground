@@ -7,6 +7,7 @@ mod ui;
 mod waves;
 
 use crate::tower_defense::waves::{Wave, WaveManager, WaveStage};
+use crate::pid_controller;
 
 use self::enemy::EnemyCreateOptions;
 
@@ -50,6 +51,7 @@ impl Plugin for TowerDefensePlugin {
 			.add_system(pid_controller::system)
 			.add_system(waves::spawn_enemies_from_waves)
 			.add_system(enemy::move_enemies)
+			// .add_system(enemy::move_enemies_with_pid)
 			.add_system(enemy::monitor_health)
 			.add_system(towers::operate_towers)
 			.add_system(ui::update_wave_text);
