@@ -55,6 +55,7 @@ impl Plugin for TowerDefensePlugin {
 			.add_system(enemy::monitor_health)
 			.add_system(towers::operate_towers)
 			.add_system(towers::move_projectiles)
+			.add_system(towers::projectile_collisions)
 			.add_system(ui::update_wave_text);
 	}
 }

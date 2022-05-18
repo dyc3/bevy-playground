@@ -2,6 +2,8 @@ use bevy::prelude::*;
 
 use crate::{tower_defense::enemy, pid_controller::PidControlled};
 
+use super::enemy::Enemy;
+
 #[derive(Component)]
 pub struct Tower {
 	pub range: f32,
@@ -50,7 +52,6 @@ pub fn operate_towers(
 
 			// tower attacks
 			if tower.attack_timer.tick(time.delta()).just_finished() {
-				enemy.hurt(10);
 				let proj = TowerProjectile {
 					damage: 10,
 					speed: 10.,
@@ -106,7 +107,6 @@ pub fn move_projectiles(
 			continue;
 		}
 		let target = result.unwrap();
-		info!("MOVE PROJECTILE");
 
 		let up = Vec3::new(0.0, 1.0, 0.0);
 		let forward = Vec3::normalize(transform.translation - target.translation);
@@ -114,8 +114,32 @@ pub fn move_projectiles(
 		let up = forward.cross(right);
 		let look_at = Quat::from_mat3(&Mat3::from_cols(right, up, forward));
 
-		transform.rotation = transform.rotation.slerp(look_at, 2. * time.delta().as_secs_f32());
+		transform.rotation = transform.rotation.slerp(look_at, 4. * time.delta().as_secs_f32());
 		let move_delta = transform.forward() * projectile.speed * time.delta().as_secs_f32();
 		transform.translation += move_delta;
+	}
+}
+
+pub fn projectile_collisions(
+	mut commands: Commands,
+	mut projectiles: Query<(Entity, &mut TowerProjectile, &Transform)>,
+	mut enemies: Query<(Entity, &mut Enemy, &Transform), Without<TowerProjectile>>,
+) {
+	for (entity, mut projectile, transform) in projectiles.iter_mut() {
+		let result = enemies.get_mut(projectile.target);
+		if result.is_err() {
+			// retarget if there are more enemies
+			if enemies.iter().count() > 0 {
+				projectile.target = enemies.iter().next().unwrap().0;
+			} else {
+				commands.entity(entity).despawn();
+			}
+			continue;
+		}
+		let (enemy_entity, mut enemy, enemy_transform) = result.unwrap();
+		if transform.translation.distance(enemy_transform.translation) < 0.5 {
+			commands.entity(entity).despawn();
+			enemy.hurt(projectile.damage);
+		}
 	}
 }
