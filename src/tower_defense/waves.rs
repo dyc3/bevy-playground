@@ -101,7 +101,7 @@ pub fn spawn_enemies_from_waves(
 	match wave_manager.wave_status {
 		WaveStatus::Pending => {
 			if keyboard_input.pressed(KeyCode::Space) {
-				println!("Starting wave {}", wave_manager.current_wave_index);
+				info!("Starting wave {}", wave_manager.current_wave_index);
 				wave_manager.enemy_spawn_timer = Timer::from_seconds(
 					wave_manager.current_wave().stage.spawn_rate, true
 				);
@@ -131,7 +131,7 @@ pub fn spawn_enemies_from_waves(
 			}
 		}
 		WaveStatus::Finished => {
-			println!("Wave complete");
+			info!("Wave complete");
 			wave_manager.current_wave_index += 1;
 			wave_manager.set_wave_status(WaveStatus::Pending);
 		}
