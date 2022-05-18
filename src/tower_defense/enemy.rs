@@ -97,11 +97,12 @@ pub(crate) fn monitor_health(
 ) {
 	for enemy in query.iter_mut() {
 		let (entity, enemy, material_handle) = enemy;
+		if enemy.health <= 0 {
+			commands.entity(entity).despawn();
+			continue;
+		}
 		let mat = materials.get_mut(material_handle).expect("no material found");
 		// FIXME: changes color for all enemies that share this material instead of just this one. maybe I have to do some shader stuff?
 		mat.base_color = Color::from(Vec4::from(Color::WHITE).lerp(Vec4::from(Color::RED), enemy.health_percent()));
-		if enemy.health <= 0 {
-			commands.entity(entity).despawn();
-		}
 	}
 }
