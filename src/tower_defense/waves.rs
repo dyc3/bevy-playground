@@ -5,7 +5,7 @@ use crate::tower_defense::enemy::Enemy;
 #[derive(Component)]
 pub struct WaveManager {
 	pub waves: Vec<Wave>,
-	pub current_wave: usize,
+	pub current_wave_index: usize,
 	enemy_spawn_timer: Timer,
 	wave_status: WaveStatus,
 }
@@ -14,18 +14,26 @@ impl WaveManager {
 	pub fn new(waves: Vec<Wave>) -> Self {
 		Self {
 			waves,
-			current_wave: 0,
+			current_wave_index: 0,
 			enemy_spawn_timer: Timer::from_seconds(0.5, true),
 			wave_status: WaveStatus::Pending,
 		}
 	}
 
+	pub fn wave_status(&self) -> WaveStatus {
+		self.wave_status
+	}
+
+	pub fn current_wave_num(&self) -> usize {
+		(self.current_wave_index + 1).min(self.waves.len())
+	}
+
 	pub fn current_wave(&self) -> &Wave {
-		&self.waves[self.current_wave]
+		&self.waves[self.current_wave_index]
 	}
 
 	pub fn current_wave_mut(&mut self) -> &mut Wave {
-		&mut self.waves[self.current_wave]
+		&mut self.waves[self.current_wave_index]
 	}
 }
 
@@ -79,14 +87,14 @@ pub fn spawn_enemies_from_waves(
 	mut meshes: ResMut<Assets<Mesh>>,
 	mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-	if wave_manager.current_wave >= wave_manager.waves.len() {
+	if wave_manager.current_wave_index >= wave_manager.waves.len() {
 		return;
 	}
 
 	match wave_manager.wave_status {
 		WaveStatus::Pending => {
 			if keyboard_input.pressed(KeyCode::Space) {
-				println!("Starting wave {}", wave_manager.current_wave);
+				println!("Starting wave {}", wave_manager.current_wave_index);
 				wave_manager.wave_status = WaveStatus::InProgress;
 				wave_manager.enemy_spawn_timer = Timer::from_seconds(
 					wave_manager.current_wave().stage.spawn_rate, true
@@ -113,7 +121,7 @@ pub fn spawn_enemies_from_waves(
 		}
 		WaveStatus::Finished => {
 			println!("Wave complete");
-			wave_manager.current_wave += 1;
+			wave_manager.current_wave_index += 1;
 			wave_manager.wave_status = WaveStatus::Pending;
 		}
 	}
