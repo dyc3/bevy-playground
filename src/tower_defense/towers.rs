@@ -57,7 +57,7 @@ pub fn operate_towers(
 					speed: 10.,
 					target: *enemy_entity,
 				};
-				proj.spawn(transform.translation, &mut commands, &mut meshes, &mut materials);
+				proj.spawn(transform.translation, transform.rotation, &mut commands, &mut meshes, &mut materials);
 				tower.attack_timer.reset();
 			}
 		}
@@ -75,6 +75,7 @@ impl TowerProjectile {
 	pub fn spawn(
 		self,
 		pos: Vec3,
+		rot: Quat,
 		commands: &mut Commands,
 		meshes: &mut ResMut<Assets<Mesh>>,
 		materials: &mut ResMut<Assets<StandardMaterial>>,
@@ -84,11 +85,13 @@ impl TowerProjectile {
 			base_color: Color::BLUE,
 			..Default::default()
 		});
+		let mut t = Transform::from_xyz(pos.x, pos.y, pos.z);
+		t.rotation = rot;
 		commands.spawn_bundle(
 			PbrBundle {
 				mesh: mesh,
 				material: material,
-				transform: Transform::from_xyz(pos.x, pos.y, pos.z),
+				transform: t,
 				..Default::default()
 			}
 		)
