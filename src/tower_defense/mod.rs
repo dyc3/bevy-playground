@@ -149,12 +149,22 @@ fn add_towers(
 		base_color: Color::WHITE,
 		..Default::default()
 	});
+
+	let mut tower_positions = vec![
+		Vec3::from((-15., -5., 0.)),
+		Vec3::from((-10., -5., 0.)),
+	];
+
 	for i in 0..15  {
+		tower_positions.push(Vec3::from((15.0 - (i * 2) as f32, 3.0, 0.0)));
+	}
+
+	for pos in tower_positions {
 		commands.spawn_bundle(
 			PbrBundle {
 				mesh: mesh.clone(),
 				material: material.clone(),
-				transform: Transform::from_xyz(15.0 - (i * 2) as f32, 3.0, 0.0),
+				transform: Transform::from_xyz(pos.x, pos.y, pos.z),
 				..Default::default()
 			}
 		)
