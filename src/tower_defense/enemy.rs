@@ -65,7 +65,7 @@ impl Enemy {
 			PbrBundle {
 				mesh: mesh.clone(),
 				material: material.clone(),
-				transform: Transform::from_xyz(-0., 0., 0.),
+				transform: Transform::from_xyz(-10000., 10000., 0.),
 				..Default::default()
 			}
 		)
