@@ -32,6 +32,13 @@ impl Plugin for TowerDefensePlugin {
 								path_id: 0,
 							}),
 						},
+						Wave {
+							stage: WaveStage::new(1000, 0.1, EnemyCreateOptions {
+								health: 100,
+								speed: 0.1,
+								path_id: 0,
+							}),
+						},
 					],
 				)
 			)
