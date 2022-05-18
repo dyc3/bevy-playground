@@ -47,6 +47,7 @@ impl Plugin for TowerDefensePlugin {
 			.add_startup_system(add_path)
 			.add_startup_system(add_towers)
 			.add_startup_system(ui::setup_ui)
+			.add_system(pid_controller::system)
 			.add_system(waves::spawn_enemies_from_waves)
 			.add_system(enemy::move_enemies)
 			.add_system(enemy::monitor_health)

@@ -2,6 +2,7 @@ use bevy::prelude::*;
 
 mod hello;
 mod tower_defense;
+mod pid_controller;
 
 fn main() {
     App::new()
