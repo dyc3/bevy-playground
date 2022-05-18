@@ -53,7 +53,7 @@ pub fn operate_towers(
 			// tower attacks
 			if tower.attack_timer.tick(time.delta()).just_finished() {
 				let proj = TowerProjectile {
-					damage: 10,
+					damage: 15,
 					speed: 10.,
 					target: *enemy_entity,
 				};
