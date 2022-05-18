@@ -49,17 +49,30 @@ impl Path {
 			self.nodes[i].percent = dist_sum / total_length;
 			dist_sum += distance;
 		}
-		let len = self.nodes.len(); // borrowck workaround
-		self.nodes[len - 1].percent = 1.0;
+		self.nodes.last_mut().map(|node| node.percent = 1.0);
 	}
 
 	/// Returns the point on the path at the given percent.
-	pub fn get_point_along_path(&self, t: f32) -> Vec3 {
+	#[allow(dead_code)]
+	pub fn get_point_along_path_percent(&self, t: f32) -> Vec3 {
 		for i in 0..self.nodes.len() - 1 {
 			let p1 = &self.nodes[i];
 			let p2 = &self.nodes[i + 1];
 			if p1.percent <= t && t <= p2.percent {
 				let t = (t - p1.percent) / (p2.percent - p1.percent);
+				return p1.point.lerp(p2.point, t);
+			}
+		}
+		Vec3::new(-100., 0., 0.)
+	}
+
+	/// Returns the point on the path at the given distance from the start.
+	pub fn get_point_along_path(&self, distance: f32) -> Vec3 {
+		for i in 0..self.nodes.len() - 1 {
+			let p1 = &self.nodes[i];
+			let p2 = &self.nodes[i + 1];
+			if p1.distance <= distance && distance <= p2.distance {
+				let t = (distance - p1.distance) / (p2.distance - p1.distance);
 				return p1.point.lerp(p2.point, t);
 			}
 		}
@@ -92,7 +105,7 @@ fn test_total_length_2() {
 }
 
 #[test]
-fn test_get_point_along_path() {
+fn test_get_point_along_path_percent() {
 	let path = Path::new(
 		0,
 		vec![
@@ -103,6 +116,22 @@ fn test_get_point_along_path() {
 	assert_eq!(path.nodes[0].percent, 0.0);
 	assert_eq!(path.nodes[1].percent, 1./3.);
 	assert_eq!(path.nodes[2].percent, 1.0);
-	assert_eq!(path.get_point_along_path(0.0), Vec3::new(0.0, 0.0, 0.0));
-	assert_eq!(path.get_point_along_path(0.5), Vec3::new(15.0, 0.0, 0.0));
+	assert_eq!(path.get_point_along_path_percent(0.0), Vec3::new(0.0, 0.0, 0.0));
+	assert_eq!(path.get_point_along_path_percent(0.5), Vec3::new(15.0, 0.0, 0.0));
+}
+
+#[test]
+fn test_get_point_along_path_distance() {
+	let path = Path::new(
+		0,
+		vec![
+		Vec3::new(0.0, 0.0, 0.0),
+		Vec3::new(10.0, 0.0, 0.0),
+		Vec3::new(30.0, 0.0, 0.0),
+	]);
+	assert_eq!(path.nodes[0].distance, 0.);
+	assert_eq!(path.nodes[1].distance, 10.);
+	assert_eq!(path.nodes[2].distance, 30.);
+	assert_eq!(path.get_point_along_path(0.), Vec3::new(0., 0., 0.));
+	assert_eq!(path.get_point_along_path(5.), Vec3::new(5., 0., 0.));
 }
