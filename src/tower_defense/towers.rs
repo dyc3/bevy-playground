@@ -9,6 +9,23 @@ pub struct Tower {
 	pub range: f32,
 	pub attack_timer: Timer,
 	pub targeting: TowerTargeting,
+
+	/// The position the tower is currently looking at. Used for smoothly turning.
+	/// Changing the position that the tower is aiming at should be done through the
+	/// corresponding PidControlled component.
+	aim_position: Vec3,
+}
+
+impl Tower {
+	/// TODO: add TowerCreateOptions struct to set parameters
+	pub fn new() -> Self {
+		Self {
+			range: 10.,
+			attack_timer: Timer::from_seconds(1.0, true),
+			targeting: TowerTargeting::First,
+			aim_position: Vec3::new(0., 0., 0.),
+		}
+	}
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -23,15 +40,17 @@ impl Default for TowerTargeting {
 	}
 }
 
+const PID_CONTROL_LOOK_AT: u64 = 1;
+
 pub fn operate_towers(
 	time: Res<Time>,
-	mut towers: Query<(&mut Tower, &mut Transform)>,
+	mut towers: Query<(&mut Tower, &Transform, &mut PidControlled<Vec3, PID_CONTROL_LOOK_AT>)>,
 	mut enemy: Query<(&mut enemy::Enemy, &Transform, Entity), Without<Tower>>,
 	mut commands: Commands,
 	mut meshes: ResMut<Assets<Mesh>>,
 	mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-	for (mut tower, mut transform) in towers.iter_mut() {
+	for (mut tower, transform, mut controller) in towers.iter_mut() {
 		let mut enemies_in_range = enemy.iter_mut().filter(|e| transform.translation.distance(e.1.translation) < tower.range).collect::<Vec<_>>();
 		let target_enemy = match tower.targeting {
 			TowerTargeting::First => {
@@ -48,7 +67,8 @@ pub fn operate_towers(
 
 		if let Some((enemy, enemy_pos, enemy_entity)) = target_enemy {
 			// make the tower look at the closest enemy
-			transform.look_at(enemy_pos.translation, Vec3::new(0.0, 1.0, 0.0));
+			// transform.look_at(enemy_pos.translation, Vec3::new(0.0, 1.0, 0.0));
+			controller.set_target(enemy_pos.translation);
 
 			// tower attacks
 			if tower.attack_timer.tick(time.delta()).just_finished() {
@@ -61,6 +81,17 @@ pub fn operate_towers(
 				tower.attack_timer.reset();
 			}
 		}
+	}
+}
+
+pub fn tower_smooth_look(
+	time: Res<Time>,
+	mut towers: Query<(&mut Tower, &mut Transform, &mut PidControlled<Vec3, PID_CONTROL_LOOK_AT>)>,
+) {
+	for (mut tower, mut transform, mut controller) in towers.iter_mut() {
+		let aim = tower.aim_position;
+		tower.aim_position += controller.compute(time.delta_seconds(), aim);
+		transform.look_at(tower.aim_position, Vec3::new(0.0, 1.0, 0.0));
 	}
 }
 

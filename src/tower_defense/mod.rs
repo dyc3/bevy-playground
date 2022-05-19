@@ -7,7 +7,7 @@ mod ui;
 mod waves;
 
 use crate::tower_defense::waves::{Wave, WaveManager, WaveStage};
-use crate::pid_controller;
+use crate::pid_controller::{self, PidControlled};
 
 use self::enemy::EnemyCreateOptions;
 
@@ -54,6 +54,7 @@ impl Plugin for TowerDefensePlugin {
 			// .add_system(enemy::move_enemies_with_pid)
 			.add_system(enemy::monitor_health)
 			.add_system(towers::operate_towers)
+			.add_system(towers::tower_smooth_look)
 			.add_system(towers::move_projectiles)
 			.add_system(towers::projectile_collisions)
 			.add_system(ui::update_wave_text);
@@ -144,6 +145,8 @@ fn add_path(
 		.insert(path);
 }
 
+const PID_CONTROL_LOOK_AT: u64 = 1;
+
 fn add_towers(
 	mut commands: Commands,
 	mut meshes: ResMut<Assets<Mesh>>,
@@ -173,10 +176,7 @@ fn add_towers(
 				..Default::default()
 			}
 		)
-			.insert(towers::Tower {
-				range: 10.0,
-				attack_timer: Timer::from_seconds(1., true),
-				targeting: towers::TowerTargeting::default(),
-			});
+			.insert(PidControlled::<Vec3, PID_CONTROL_LOOK_AT>::new(0.1, 0., 0.01))
+			.insert(towers::Tower::new());
 	}
 }

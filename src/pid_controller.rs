@@ -80,7 +80,7 @@ pub fn system(
 ///
 /// see: https://en.wikipedia.org/wiki/PID_controller
 #[derive(Component, Debug)]
-pub struct PidControlled<T, const I: u64> {
+pub struct PidControlled<T, const I: u64> {  // Maybe it would be better to accept an enum for I?
 	pub proportional_gain: f32,
 	pub integral_gain: f32,
 	pub derivative_gain: f32,
