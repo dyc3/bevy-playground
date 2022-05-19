@@ -63,7 +63,11 @@ impl Path {
 				return p1.point.lerp(p2.point, t);
 			}
 		}
-		Vec3::new(-100., 0., 0.)
+		if t < 0. {
+			return self.nodes.first().map(|node| node.point).unwrap_or(Vec3::new(0., 0., 0.));
+		} else {
+			return self.nodes.last().map(|node| node.point).unwrap_or(Vec3::new(0., 0., 0.));
+		}
 	}
 
 	/// Returns the point on the path at the given distance from the start.
@@ -76,7 +80,7 @@ impl Path {
 				return p1.point.lerp(p2.point, t);
 			}
 		}
-		Vec3::new(-100., 0., 0.)
+		self.nodes.last().map(|node| node.point).unwrap_or(Vec3::new(0., 0., 0.))
 	}
 }
 
