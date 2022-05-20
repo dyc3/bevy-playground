@@ -63,8 +63,8 @@ impl Enemy {
 		});
 		commands.spawn_bundle(
 			PbrBundle {
-				mesh: mesh.clone(),
-				material: material.clone(),
+				mesh,
+				material,
 				transform: Transform::from_xyz(-10000., 10000., 0.),
 				..Default::default()
 			}
