@@ -9,6 +9,7 @@ pub struct Tower {
 	pub range: f32,
 	pub attack_timer: Timer,
 	pub targeting: TowerTargeting,
+	pub attack_type: TowerAttackType,
 
 	/// The position the tower is currently looking at. Used for smoothly turning.
 	/// Changing the position that the tower is aiming at should be done through the
@@ -22,7 +23,8 @@ impl Tower {
 		Self {
 			range: 10.,
 			attack_timer: Timer::from_seconds(1.0, true),
-			targeting: TowerTargeting::First,
+			targeting: TowerTargeting::default(),
+			attack_type: TowerAttackType::default(),
 			aim_position: Vec3::new(0., 0., 0.),
 		}
 	}
@@ -37,6 +39,18 @@ pub enum TowerTargeting {
 impl Default for TowerTargeting {
 	fn default() -> Self {
 		TowerTargeting::First
+	}
+}
+
+#[derive(Debug, Clone, Copy)]
+pub enum TowerAttackType {
+	Laser,
+	Projectile,
+}
+
+impl Default for TowerAttackType {
+	fn default() -> Self {
+		TowerAttackType::Laser
 	}
 }
 
@@ -72,12 +86,19 @@ pub fn operate_towers(
 
 			// tower attacks
 			if tower.attack_timer.tick(time.delta()).just_finished() {
-				let proj = TowerProjectile {
-					damage: 15,
-					speed: 10.,
-					target: *enemy_entity,
-				};
-				proj.spawn(transform.translation, transform.rotation, &mut commands, &mut meshes, &mut materials);
+				match tower.attack_type {
+					TowerAttackType::Laser => {
+						enemy.hurt(15);
+					},
+					TowerAttackType::Projectile => {
+						let proj = TowerProjectile {
+							damage: 15,
+							speed: 10.,
+							target: *enemy_entity,
+						};
+						proj.spawn(transform.translation, transform.rotation, &mut commands, &mut meshes, &mut materials);
+					},
+				}
 				tower.attack_timer.reset();
 			}
 		}
