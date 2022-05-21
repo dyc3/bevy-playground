@@ -126,17 +126,17 @@ pub(crate) fn move_enemies_with_pid(
 
 pub(crate) fn monitor_health(
 	mut commands: Commands,
-	mut query: Query<(Entity, &Enemy, &Handle<StandardMaterial>), With<Enemy>>,
+	mut query: Query<(Entity, &Enemy, &Handle<StandardMaterial>, &mut Transform), With<Enemy>>,
 	mut materials: ResMut<Assets<StandardMaterial>>
 ) {
-	for enemy in query.iter_mut() {
-		let (entity, enemy, material_handle) = enemy;
+	for (entity, enemy, material_handle, mut transform) in query.iter_mut() {
 		if enemy.health <= 0 {
 			commands.entity(entity).despawn();
 			continue;
 		}
 		let mat = materials.get_mut(material_handle).expect("no material found");
 		// FIXME: changes color for all enemies that share this material instead of just this one. maybe I have to do some shader stuff?
-		mat.base_color = Color::from(Vec4::from(Color::WHITE).lerp(Vec4::from(Color::RED), enemy.health_percent()));
+		mat.base_color = Color::from(Vec4::from(Color::RED).lerp(Vec4::from(Color::WHITE), enemy.health_percent()));
+		transform.scale = Vec3::new(0.5, 0.5, 0.5).lerp(Vec3::ONE, enemy.health_percent());
 	}
 }
