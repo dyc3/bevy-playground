@@ -74,8 +74,8 @@ fn add_camera(mut commands: Commands) {
 fn add_lights(mut commands: Commands) {
 	// ambient light
 	commands.insert_resource(AmbientLight {
-		color: Color::ORANGE_RED,
-		brightness: 0.02,
+		color: Color::WHITE,
+		brightness: 0.15,
 	});
 
 	// directional 'sun' light
