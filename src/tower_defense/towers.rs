@@ -90,17 +90,17 @@ pub fn operate_towers(
 					TowerAttackType::Laser => {
 						enemy.hurt(15);
 						let mesh = meshes.add(Mesh::from(
-							// shape::Capsule {
-							// 	radius: 0.1,
-							// 	rings: 1,
-							// 	depth: 1.,
-							// 	latitudes: 5,
-							// 	longitudes: 5,
-							// 	uv_profile: shape::CapsuleUvProfile::Uniform,
-							// }
-							shape::Cube {
-								size: 0.5,
+							shape::Capsule {
+								radius: 0.1,
+								rings: 1,
+								depth: 1.,
+								latitudes: 5,
+								longitudes: 5,
+								uv_profile: shape::CapsuleUvProfile::Uniform,
 							}
+							// shape::Cube {
+							// 	size: 0.5,
+							// }
 						));
 						let material = materials.add(StandardMaterial {
 							base_color: Color::GREEN,
@@ -170,45 +170,17 @@ pub fn aim_lasers(
 	mut lasers: Query<(&TowerLaser, &mut Transform)>,
 ) {
 	for (laser, mut transform) in lasers.iter_mut() {
-		let mut start_pos = laser.start_pos;
-		if laser.start_pos == laser.end_pos {
-			warn!("laser start and end pos are the same");
-			start_pos = Vec3::new(0.0, 0.0, 0.0);
-		}
-
-		let midpoint = start_pos.lerp(laser.end_pos, 0.5);
+		let midpoint = laser.start_pos.lerp(laser.end_pos, 0.5);
 		transform.translation = midpoint;
-		// transform.translation = laser.start_pos;
-		// transform.scale.y = laser.start_pos.distance(laser.end_pos) / 2.;
-		transform.scale.z = start_pos.distance(laser.end_pos);
+		transform.scale.y = laser.start_pos.distance(laser.end_pos);
 
-		transform.look_at(laser.end_pos, Vec3::new(0.0, 1.0, 0.0));
-
-
-
-
-		// let angle_x = (laser.end_pos.x / laser.end_pos.y).tan();
-		// let angle_y = (laser.end_pos.y / laser.end_pos.z).tan();
-		// let angle_z = (laser.end_pos.z / laser.end_pos.x).tan();
-		// let (mut euler_x, mut euler_y, mut euler_z) = transform.rotation.to_euler(EulerRot::XYZ);
-		// euler_x = angle_x;
-		// euler_y = angle_y;
-		// euler_z = angle_z;
-		// transform.rotation = Quat::from_euler(EulerRot::XYZ, euler_x, euler_y, euler_z);
-
-
-
-
-
-		// let direction = laser.end_pos - laser.start_pos;
-		// let angle = direction.x.atan2(direction.z);
-		// let up = Vec3::new(0.0, 1.0, 0.0);
-
-		// let qx = up.x * (angle / 2.).sin();
-		// let qy = up.y * (angle / 2.).sin();
-		// let qz = up.z * (angle / 2.).sin();
-		// let qw = (angle / 2.).cos();
-		// transform.rotation = Quat::from_xyzw(qx, qy, qz, qw);
+		// because the long part of the laser is on the local Y axis
+		let current_direction = transform.up();
+		// calculate unit vector that is parralel to the line between <start> and <end>
+		let new_direction = (laser.end_pos - laser.start_pos).normalize();
+		// create a rotation that will rotate <current_direction> to <new_direction>
+		let rotation = Quat::from_rotation_arc(current_direction, new_direction);
+		transform.rotate(rotation);
 	}
 }
 
