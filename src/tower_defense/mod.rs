@@ -170,6 +170,8 @@ fn add_towers(
 	}
 
 	for pos in tower_positions {
+		let mut tower = towers::Tower::new();
+		tower.attack_type = towers::TowerAttackType::Laser;
 		commands.spawn_bundle(
 			PbrBundle {
 				mesh: mesh.clone(),
@@ -179,6 +181,6 @@ fn add_towers(
 			}
 		)
 			.insert(PidControlled::<Vec3, PID_CONTROL_LOOK_AT>::new(0.1, 0., 0.01))
-			.insert(towers::Tower::new());
+			.insert(tower);
 	}
 }
