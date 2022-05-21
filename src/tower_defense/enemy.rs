@@ -125,6 +125,7 @@ pub(crate) fn move_enemies_with_pid(
 }
 
 pub(crate) fn monitor_health(
+	time: Res<Time>,
 	mut commands: Commands,
 	mut query: Query<(Entity, &Enemy, &Handle<StandardMaterial>, &mut Transform), With<Enemy>>,
 	mut materials: ResMut<Assets<StandardMaterial>>
@@ -136,7 +137,11 @@ pub(crate) fn monitor_health(
 		}
 		let mat = materials.get_mut(material_handle).expect("no material found");
 		// FIXME: changes color for all enemies that share this material instead of just this one. maybe I have to do some shader stuff?
-		mat.base_color = Color::from(Vec4::from(Color::RED).lerp(Vec4::from(Color::WHITE), enemy.health_percent()));
-		transform.scale = Vec3::new(0.5, 0.5, 0.5).lerp(Vec3::ONE, enemy.health_percent());
+		let target_color = Color::from(Vec4::from(Color::RED).lerp(Vec4::from(Color::WHITE), enemy.health_percent()));
+		let target_scale = Vec3::new(0.5, 0.5, 0.5).lerp(Vec3::ONE, enemy.health_percent());
+		let lerp_speed = 5.;
+		let lerp_amount = (time.delta_seconds() * lerp_speed).clamp(0., 1.);
+		mat.base_color = Color::from(Vec4::from(mat.base_color).lerp(Vec4::from(target_color), lerp_amount));
+		transform.scale = transform.scale.lerp(target_scale, lerp_amount);
 	}
 }
