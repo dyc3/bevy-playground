@@ -93,18 +93,16 @@ pub fn operate_towers(
 				match tower.attack_type {
 					TowerAttackType::Laser => {
 						enemy.hurt(15);
+						let radius = 0.1;
 						let mesh = meshes.add(Mesh::from(
 							shape::Capsule {
-								radius: 0.1,
+								radius,
 								rings: 1,
-								depth: 1.,
+								depth: 1. - (radius * 2.),
 								latitudes: 5,
 								longitudes: 5,
 								uv_profile: shape::CapsuleUvProfile::Uniform,
 							}
-							// shape::Cube {
-							// 	size: 0.5,
-							// }
 						));
 						let material = materials.add(StandardMaterial {
 							base_color: Color::GREEN,
