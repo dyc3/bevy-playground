@@ -65,7 +65,11 @@ pub fn operate_towers(
 	mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
 	for (mut tower, transform, mut controller, tower_entity) in towers.iter_mut() {
-		let mut enemies_in_range = enemy.iter_mut().filter(|e| transform.translation.distance(e.1.translation) < tower.range).collect::<Vec<_>>();
+		let mut enemies_in_range = enemy.iter_mut()
+			.filter(|e|
+				transform.translation.distance(e.1.translation) < tower.range && e.0.health > 0
+			)
+			.collect::<Vec<_>>();
 		let target_enemy = match tower.targeting {
 			TowerTargeting::First => {
 				enemies_in_range.iter_mut().min_by(|a, b| {
