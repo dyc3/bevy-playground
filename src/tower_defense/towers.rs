@@ -58,13 +58,13 @@ const PID_CONTROL_LOOK_AT: u64 = 1;
 
 pub fn operate_towers(
 	time: Res<Time>,
-	mut towers: Query<(&mut Tower, &Transform, &mut PidControlled<Vec3, PID_CONTROL_LOOK_AT>)>,
+	mut towers: Query<(&mut Tower, &Transform, &mut PidControlled<Vec3, PID_CONTROL_LOOK_AT>, Entity)>,
 	mut enemy: Query<(&mut enemy::Enemy, &Transform, Entity), Without<Tower>>,
 	mut commands: Commands,
 	mut meshes: ResMut<Assets<Mesh>>,
 	mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-	for (mut tower, transform, mut controller) in towers.iter_mut() {
+	for (mut tower, transform, mut controller, tower_entity) in towers.iter_mut() {
 		let mut enemies_in_range = enemy.iter_mut().filter(|e| transform.translation.distance(e.1.translation) < tower.range).collect::<Vec<_>>();
 		let target_enemy = match tower.targeting {
 			TowerTargeting::First => {
@@ -89,6 +89,41 @@ pub fn operate_towers(
 				match tower.attack_type {
 					TowerAttackType::Laser => {
 						enemy.hurt(15);
+						let mesh = meshes.add(Mesh::from(
+							// shape::Capsule {
+							// 	radius: 0.1,
+							// 	rings: 1,
+							// 	depth: 1.,
+							// 	latitudes: 5,
+							// 	longitudes: 5,
+							// 	uv_profile: shape::CapsuleUvProfile::Uniform,
+							// }
+							shape::Cube {
+								size: 0.5,
+							}
+						));
+						let material = materials.add(StandardMaterial {
+							base_color: Color::GREEN,
+							..Default::default()
+						});
+						commands.spawn_bundle(
+							PbrBundle {
+								mesh,
+								material,
+								transform: transform.clone(),
+								..Default::default()
+							}
+						)
+							.insert(TowerLaser {
+								start_pos: transform.translation,
+								end_pos: enemy_pos.translation,
+								expire_timer: Timer::from_seconds(2., false),
+								override_expired: false,
+							})
+							.insert(TowerLaserLock {
+								source: tower_entity,
+								target: *enemy_entity,
+							});
 					},
 					TowerAttackType::Projectile => {
 						let proj = TowerProjectile {
@@ -113,6 +148,101 @@ pub fn tower_smooth_look(
 		let aim = tower.aim_position;
 		tower.aim_position += controller.compute(time.delta_seconds(), aim);
 		transform.look_at(tower.aim_position, Vec3::new(0.0, 1.0, 0.0));
+	}
+}
+
+#[derive(Component, Debug)]
+pub struct TowerLaser {
+	pub start_pos: Vec3,
+	pub end_pos: Vec3,
+	pub expire_timer: Timer,
+	/// Force the laser to be expired.
+	pub override_expired: bool,
+}
+
+#[derive(Component, Debug)]
+pub struct TowerLaserLock {
+	pub source: Entity,
+	pub target: Entity,
+}
+
+pub fn aim_lasers(
+	mut lasers: Query<(&TowerLaser, &mut Transform)>,
+) {
+	for (laser, mut transform) in lasers.iter_mut() {
+		let mut start_pos = laser.start_pos;
+		if laser.start_pos == laser.end_pos {
+			warn!("laser start and end pos are the same");
+			start_pos = Vec3::new(0.0, 0.0, 0.0);
+		}
+
+		let midpoint = start_pos.lerp(laser.end_pos, 0.5);
+		transform.translation = midpoint;
+		// transform.translation = laser.start_pos;
+		// transform.scale.y = laser.start_pos.distance(laser.end_pos) / 2.;
+		transform.scale.z = start_pos.distance(laser.end_pos);
+
+		transform.look_at(laser.end_pos, Vec3::new(0.0, 1.0, 0.0));
+
+
+
+
+		// let angle_x = (laser.end_pos.x / laser.end_pos.y).tan();
+		// let angle_y = (laser.end_pos.y / laser.end_pos.z).tan();
+		// let angle_z = (laser.end_pos.z / laser.end_pos.x).tan();
+		// let (mut euler_x, mut euler_y, mut euler_z) = transform.rotation.to_euler(EulerRot::XYZ);
+		// euler_x = angle_x;
+		// euler_y = angle_y;
+		// euler_z = angle_z;
+		// transform.rotation = Quat::from_euler(EulerRot::XYZ, euler_x, euler_y, euler_z);
+
+
+
+
+
+		// let direction = laser.end_pos - laser.start_pos;
+		// let angle = direction.x.atan2(direction.z);
+		// let up = Vec3::new(0.0, 1.0, 0.0);
+
+		// let qx = up.x * (angle / 2.).sin();
+		// let qy = up.y * (angle / 2.).sin();
+		// let qz = up.z * (angle / 2.).sin();
+		// let qw = (angle / 2.).cos();
+		// transform.rotation = Quat::from_xyzw(qx, qy, qz, qw);
+	}
+}
+
+pub fn update_laser_locks(
+	mut lasers: Query<(&TowerLaserLock, &mut TowerLaser)>,
+	objects: Query<&Transform, Without<TowerLaser>>,
+) {
+	for (laser_lock, mut laser) in lasers.iter_mut() {
+		if laser_lock.source == laser_lock.target {
+			warn!("laser lock source and target are the same");
+		}
+		let source = objects.get(laser_lock.source);
+		let target = objects.get(laser_lock.target);
+		if source.is_err() || target.is_err() {
+			laser.override_expired = true;
+			continue;
+		}
+		let source = source.unwrap();
+		let target = target.unwrap();
+
+		laser.start_pos = source.translation;
+		laser.end_pos = target.translation;
+	}
+}
+
+pub fn clean_up_expired_lasers(
+	time: Res<Time>,
+	mut commands: Commands,
+	mut lasers: Query<(Entity, &mut TowerLaser)>,
+) {
+	for (entity, mut laser) in lasers.iter_mut() {
+		if laser.override_expired || laser.expire_timer.tick(time.delta()).finished() {
+			commands.entity(entity).despawn();
+		}
 	}
 }
 
