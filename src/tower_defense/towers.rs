@@ -119,7 +119,7 @@ pub fn operate_towers(
 							.insert(TowerLaser {
 								start_pos: transform.translation,
 								end_pos: enemy_pos.translation,
-								expire_timer: Timer::from_seconds(2., false),
+								expire_timer: Timer::from_seconds(0.5, false),
 								override_expired: false,
 							})
 							.insert(TowerLaserLock {
