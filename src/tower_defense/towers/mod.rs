@@ -123,7 +123,7 @@ pub fn operate_towers(
 			controller.set_target(enemy_pos.translation);
 
 			// tower attacks
-			if tower.attack_timer.tick(time.delta()).just_finished() {
+			for _ in 0..tower.attack_timer.tick(time.delta()).times_finished() {
 				match tower.attack_type {
 					TowerAttackType::Laser => {
 						enemy.hurt(15);
