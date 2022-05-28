@@ -209,6 +209,17 @@ pub fn tower_smooth_look(
 	}
 }
 
+pub fn tower_process_level_ups(
+	mut towers: Query<&mut Tower>,
+) {
+	for mut tower in towers.iter_mut() {
+		if tower.need_level_up() {
+			tower.apply_level_up();
+			info!("Tower leveled up to {}!", tower.level());
+		}
+	}
+}
+
 #[derive(Component, Debug)]
 pub struct TowerLaser {
 	pub start_pos: Vec3,
