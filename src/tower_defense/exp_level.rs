@@ -103,3 +103,40 @@ pub struct EventExpGain {
 pub struct EventLevelUp {
 	pub entity: Entity,
 }
+
+#[cfg(test)]
+mod test {
+	use super::*;
+
+	#[test]
+	fn test_add_experience() {
+		let mut explevel = ExpLevel {
+			experience: 0,
+			level: 0,
+		};
+		explevel.add_experience(10);
+		assert_eq!(explevel.experience(), 10);
+		explevel.add_experience(10);
+		assert_eq!(explevel.experience(), 20);
+	}
+
+	#[test]
+	fn test_needs_level_up() {
+		let explevel = ExpLevel {
+			experience: 100000,
+			level: 0,
+		};
+		assert!(explevel.need_level_up());
+	}
+
+	#[test]
+	fn test_apply_level_up() {
+		let mut explevel = ExpLevel {
+			experience: 1000,
+			level: 0,
+		};
+		assert!(explevel.level_from_exp() > 0);
+		explevel.apply_level_up();
+		assert_eq!(explevel.level(), explevel.level_from_exp());
+	}
+}
