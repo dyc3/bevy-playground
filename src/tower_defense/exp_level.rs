@@ -1,4 +1,4 @@
-use bevy::{prelude::*, app::Events};
+use bevy::{prelude::*, ecs::event::Events};
 
 /// Defines what level this entity is, and manages the experience required to level up.
 #[derive(Component, Default)]
