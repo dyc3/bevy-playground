@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use bevy::prelude::*;
 
 use crate::{tower_defense::enemy, pid_controller::PidControlled};
@@ -7,9 +9,13 @@ pub mod projectile;
 #[derive(Component)]
 pub struct Tower {
 	pub range: f32,
+	/// Rate of fire in units per second.
+	pub base_attack_rate: f32,
 	pub attack_timer: Timer,
 	pub targeting: TowerTargeting,
 	pub attack_type: TowerAttackType,
+	experience: u64,
+	level: u64,
 
 	/// The position the tower is currently looking at. Used for smoothly turning.
 	/// Changing the position that the tower is aiming at should be done through the
@@ -22,10 +28,60 @@ impl Tower {
 	pub fn new() -> Self {
 		Self {
 			range: 10.,
+			base_attack_rate: 1.,
+			attack_timer: Timer::from_seconds(1.0, true),
+			targeting: TowerTargeting::default(),
+			attack_type: TowerAttackType::default(),
+			..Default::default()
+		}
+	}
+
+	/// Rate of fire in units per second.
+	pub fn attack_rate(&self) -> f32 {
+		self.base_attack_rate + (self.level as f32 * 0.1)
+	}
+
+	pub fn experience(&self) -> u64 {
+		self.experience
+	}
+
+	/// Add experience to the tower.
+	pub fn add_experience(&mut self, experience: u64) {
+		self.experience += experience;
+	}
+
+	pub fn level(&self) -> u64 {
+		self.level
+	}
+
+	/// Get what the tower's level should be based on the earned experience.
+	/// If this value is different than the current level, the tower is ready
+	/// to level up.
+	fn level_from_exp(&self) -> u64 {
+		(self.experience as f64).log2().ceil() as u64 // TODO: fine tune this formula, copilot made it
+	}
+
+	pub fn need_level_up(&self) -> bool {
+		self.level_from_exp() != self.level
+	}
+
+	pub fn apply_level_up(&mut self) {
+		self.level = self.level_from_exp();
+		self.attack_timer.set_duration(Duration::from_secs_f32(1.0 / self.attack_rate()));
+	}
+}
+
+impl Default for Tower {
+	fn default() -> Self {
+		Self {
+			range: 10.,
+			base_attack_rate: 1.,
 			attack_timer: Timer::from_seconds(1.0, true),
 			targeting: TowerTargeting::default(),
 			attack_type: TowerAttackType::default(),
 			aim_position: Vec3::new(0., 0., 0.),
+			experience: 0,
+			level: 0,
 		}
 	}
 }
