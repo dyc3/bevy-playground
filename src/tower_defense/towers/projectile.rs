@@ -1,3 +1,5 @@
+use std::cmp::Ordering;
+
 use bevy::prelude::*;
 
 use crate::{tower_defense::enemy::Enemy, pid_controller::PidControlled};
@@ -71,7 +73,11 @@ pub fn projectile_collisions(
 		if result.is_err() {
 			// retarget if there are more enemies
 			if enemies.iter().count() > 0 {
-				projectile.target = enemies.iter().next().unwrap().0;
+				projectile.target = enemies.iter().min_by(|x, y| {
+					let x_dist = (x.2.translation - transform.translation).length();
+					let y_dist = (y.2.translation - transform.translation).length();
+					x_dist.partial_cmp(&y_dist).unwrap_or_else(|| Ordering::Equal)
+				}).unwrap().0;
 			} else {
 				commands.entity(entity).despawn();
 			}
