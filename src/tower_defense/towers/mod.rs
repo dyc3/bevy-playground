@@ -4,6 +4,8 @@ use bevy::prelude::*;
 
 use crate::{tower_defense::enemy, pid_controller::PidControlled};
 
+use super::exp_level::{ExpLevel, ExperienceBus, EventExpGain};
+
 pub mod projectile;
 
 #[derive(Component)]
@@ -11,11 +13,10 @@ pub struct Tower {
 	pub range: f32,
 	/// Rate of fire in units per second.
 	pub base_attack_rate: f32,
+	attack_rate: f32,
 	pub attack_timer: Timer,
 	pub targeting: TowerTargeting,
 	pub attack_type: TowerAttackType,
-	experience: u64,
-	level: u64,
 
 	/// The position the tower is currently looking at. Used for smoothly turning.
 	/// Changing the position that the tower is aiming at should be done through the
@@ -37,37 +38,14 @@ impl Tower {
 	}
 
 	/// Rate of fire in units per second.
-	pub fn attack_rate(&self) -> f32 {
-		self.base_attack_rate + (self.level as f32 * 0.1)
+	pub fn attack_rate(&self, level: u64) -> f32 {
+		self.base_attack_rate + (level as f32 * 0.1)
 	}
 
-	pub fn experience(&self) -> u64 {
-		self.experience
-	}
-
-	/// Add experience to the tower.
-	pub fn add_experience(&mut self, experience: u64) {
-		self.experience += experience;
-	}
-
-	pub fn level(&self) -> u64 {
-		self.level
-	}
-
-	/// Get what the tower's level should be based on the earned experience.
-	/// If this value is different than the current level, the tower is ready
-	/// to level up.
-	fn level_from_exp(&self) -> u64 {
-		(self.experience as f64).log2().ceil() as u64 // TODO: fine tune this formula, copilot made it
-	}
-
-	pub fn need_level_up(&self) -> bool {
-		self.level_from_exp() != self.level
-	}
-
-	pub fn apply_level_up(&mut self) {
-		self.level = self.level_from_exp();
-		self.attack_timer.set_duration(Duration::from_secs_f32(1.0 / self.attack_rate()));
+	/// Recalculate Tower stats based on level.
+	pub fn update_stats(&mut self, level: u64) {
+		self.attack_rate = self.attack_rate(level);
+		self.attack_timer.set_duration(Duration::from_secs_f32(1.0 / self.attack_rate));
 	}
 }
 
@@ -76,12 +54,11 @@ impl Default for Tower {
 		Self {
 			range: 10.,
 			base_attack_rate: 1.,
+			attack_rate: 1.,
 			attack_timer: Timer::from_seconds(1.0, true),
 			targeting: TowerTargeting::default(),
 			attack_type: TowerAttackType::default(),
 			aim_position: Vec3::new(0., 0., 0.),
-			experience: 0,
-			level: 0,
 		}
 	}
 }
@@ -114,6 +91,7 @@ const PID_CONTROL_LOOK_AT: u64 = 1;
 
 pub fn operate_towers(
 	time: Res<Time>,
+	mut expbus: ResMut<ExperienceBus>,
 	mut towers: Query<(&mut Tower, &Transform, &mut PidControlled<Vec3, PID_CONTROL_LOOK_AT>, Entity)>,
 	mut enemy: Query<(&mut enemy::Enemy, &Transform, Entity), Without<Tower>>,
 	mut commands: Commands,
@@ -192,6 +170,7 @@ pub fn operate_towers(
 						proj.spawn(transform.translation, transform.rotation, &mut commands, &mut meshes, &mut materials);
 					},
 				}
+				expbus.experience_gain.send(EventExpGain{ entity: tower_entity, experience: 1 });
 				tower.attack_timer.reset();
 			}
 		}
@@ -209,13 +188,15 @@ pub fn tower_smooth_look(
 	}
 }
 
-pub fn tower_process_level_ups(
-	mut towers: Query<&mut Tower>,
+pub fn handle_tower_level_up(
+	expbus: Res<ExperienceBus>,
+	mut towers: Query<(&mut Tower, &ExpLevel)>,
 ) {
-	for mut tower in towers.iter_mut() {
-		if tower.need_level_up() {
-			tower.apply_level_up();
-			info!("Tower leveled up to {}!", tower.level());
+	let mut reader = expbus.level_up.get_reader();
+	for event in reader.iter(&expbus.level_up) {
+		let result = towers.get_mut(event.entity);
+		if let Ok((mut tower, tower_level)) = result {
+			tower.update_stats(tower_level.level());
 		}
 	}
 }

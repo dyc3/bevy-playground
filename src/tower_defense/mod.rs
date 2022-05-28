@@ -2,6 +2,7 @@ use bevy::prelude::*;
 
 mod towers;
 mod enemy;
+mod exp_level;
 mod map;
 mod ui;
 mod waves;
@@ -10,11 +11,20 @@ use crate::tower_defense::waves::{Wave, WaveManager, WaveStage};
 use crate::pid_controller::{self, PidControlled};
 
 use self::enemy::EnemyCreateOptions;
+use self::exp_level::{ExperienceBus, ExpLevel};
+
+#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, SystemLabel)]
+enum SimulationStepLabel {
+	Reward,
+	Cleanup,
+}
 
 pub struct TowerDefensePlugin;
 
 impl Plugin for TowerDefensePlugin {
 	fn build(&self, app: &mut App) {
+		let expbus = ExperienceBus::new();
+
 		app
 			.insert_resource(
 				WaveManager::new(
@@ -43,6 +53,7 @@ impl Plugin for TowerDefensePlugin {
 					],
 				)
 			)
+			.insert_resource(expbus)
 			.add_startup_system(add_camera)
 			.add_startup_system(add_lights)
 			.add_startup_system(add_path)
@@ -55,12 +66,24 @@ impl Plugin for TowerDefensePlugin {
 			.add_system(enemy::monitor_health)
 			.add_system(towers::operate_towers)
 			.add_system(towers::tower_smooth_look)
-			.add_system(towers::tower_process_level_ups)
 			.add_system(towers::aim_lasers)
 			.add_system(towers::update_laser_locks)
 			.add_system(towers::clean_up_expired_lasers)
 			.add_system(towers::projectile::move_projectiles)
 			.add_system(towers::projectile::projectile_collisions)
+			.add_system_set(
+				SystemSet::new()
+					.label(SimulationStepLabel::Reward)
+					.with_system(towers::handle_tower_level_up)
+					.with_system(exp_level::process_experience_gain)
+					.with_system(exp_level::process_level_ups)
+			)
+			.add_system_set(
+				SystemSet::new()
+					.label(SimulationStepLabel::Cleanup)
+					.after(SimulationStepLabel::Reward)
+					.with_system(exp_level::update_exp_bus)
+			)
 			.add_system(ui::update_wave_text);
 	}
 }
@@ -185,6 +208,7 @@ fn add_towers(
 			}
 		)
 			.insert(PidControlled::<Vec3, PID_CONTROL_LOOK_AT>::new(0.1, 0., 0.01))
-			.insert(tower);
+			.insert(tower)
+			.insert(ExpLevel::new());
 	}
 }
