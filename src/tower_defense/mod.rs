@@ -73,9 +73,9 @@ impl Plugin for TowerDefensePlugin {
 			.add_system(enemy::monitor_health)
 			.add_system(towers::operate_towers)
 			.add_system(towers::tower_smooth_look)
-			.add_system(towers::aim_lasers)
-			.add_system(towers::update_laser_locks)
-			.add_system(towers::clean_up_expired_lasers)
+			.add_system(towers::laser::aim_lasers)
+			.add_system(towers::laser::update_laser_locks)
+			.add_system(towers::laser::clean_up_expired_lasers)
 			.add_system(towers::projectile::move_projectiles)
 			.add_system(towers::projectile::projectile_collisions)
 			.add_system_set(
