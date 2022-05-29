@@ -41,7 +41,7 @@ impl ExpLevel {
 
 pub fn process_level_ups(
 	mut expbus: ResMut<ExperienceBus>,
-	mut objects: Query<(Entity, &mut ExpLevel)>,
+	mut objects: Query<(Entity, &mut ExpLevel), Changed<ExpLevel>>,
 ) {
 	for (entity, mut obj) in objects.iter_mut() {
 		if obj.need_level_up() {

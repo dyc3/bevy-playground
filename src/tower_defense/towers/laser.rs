@@ -16,7 +16,7 @@ pub struct TowerLaserLock {
 }
 
 pub fn aim_lasers(
-	mut lasers: Query<(&TowerLaser, &mut Transform)>,
+	mut lasers: Query<(&TowerLaser, &mut Transform), Changed<TowerLaser>>,
 ) {
 	for (laser, mut transform) in lasers.iter_mut() {
 		let midpoint = laser.start_pos.lerp(laser.end_pos, 0.5);

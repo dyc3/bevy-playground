@@ -193,7 +193,7 @@ pub fn tower_smooth_look(
 
 pub fn handle_tower_level_up(
 	expbus: Res<ExperienceBus>,
-	mut towers: Query<(&mut Tower, &ExpLevel)>,
+	mut towers: Query<(&mut Tower, &ExpLevel), Changed<ExpLevel>>,
 ) {
 	let mut reader = expbus.level_up.get_reader();
 	for event in reader.iter(&expbus.level_up) {
