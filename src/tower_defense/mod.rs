@@ -15,7 +15,12 @@ use self::exp_level::{ExperienceBus, ExpLevel};
 
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, SystemLabel)]
 enum SimulationStepLabel {
+	/// Core game logic. Eg. Movement, collision, etc.
+	Logic,
+	Visual,
+	/// Reward the player for accomplishments.
 	Reward,
+	/// Clean up, prepare for next frame.
 	Cleanup,
 }
 
@@ -68,14 +73,22 @@ impl Plugin for TowerDefensePlugin {
 			.add_startup_system(ui::setup_ui)
 			.add_system(pid_controller::system_pid_controller_position)
 			.add_system(waves::spawn_enemies_from_waves)
-			.add_system(enemy::move_enemies)
+			.add_system_set(
+				SystemSet::new()
+					.label(SimulationStepLabel::Logic)
+					.with_system(enemy::move_enemies)
+					.with_system(enemy::monitor_health)
+			)
 			// .add_system(enemy::move_enemies_with_pid)
-			.add_system(enemy::monitor_health)
 			.add_system(towers::operate_towers)
-			.add_system(towers::tower_smooth_look)
-			.add_system(towers::laser::aim_lasers)
-			.add_system(towers::laser::update_laser_locks)
-			.add_system(towers::laser::clean_up_expired_lasers)
+			.add_system(towers::tower_smooth_look.label(SimulationStepLabel::Visual))
+			.add_system_set(
+				SystemSet::new()
+					.label(SimulationStepLabel::Visual)
+					.with_system(towers::laser::aim_lasers)
+					.with_system(towers::laser::update_laser_locks)
+					.with_system(towers::laser::clean_up_expired_lasers)
+			)
 			.add_system(towers::projectile::move_projectiles)
 			.add_system(towers::projectile::projectile_collisions)
 			.add_system_set(
