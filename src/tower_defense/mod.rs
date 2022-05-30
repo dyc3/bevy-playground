@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use bevy::ecs::event::Events;
 
 mod towers;
 mod enemy;
@@ -10,7 +11,7 @@ mod waves;
 use crate::tower_defense::waves::{Wave, WaveManager, WaveStage};
 use crate::pid_controller::{self, PidControlled};
 
-use self::enemy::EnemyCreateOptions;
+use self::enemy::{EnemyCreateOptions, EventEnemyDeath};
 use self::exp_level::{ExperienceBus, ExpLevel};
 
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, SystemLabel)]
@@ -29,6 +30,7 @@ pub struct TowerDefensePlugin;
 impl Plugin for TowerDefensePlugin {
 	fn build(&self, app: &mut App) {
 		let expbus = ExperienceBus::new();
+		let deathbus: Events<EventEnemyDeath> = Events::default();
 
 		app
 			.insert_resource(
@@ -66,6 +68,7 @@ impl Plugin for TowerDefensePlugin {
 				)
 			)
 			.insert_resource(expbus)
+			.insert_resource(deathbus)
 			.add_startup_system(add_camera)
 			.add_startup_system(add_lights)
 			.add_startup_system(add_path)
@@ -76,6 +79,7 @@ impl Plugin for TowerDefensePlugin {
 			.add_system_set(
 				SystemSet::new()
 					.label(SimulationStepLabel::Logic)
+					.before(SimulationStepLabel::Reward)
 					.with_system(enemy::move_enemies)
 					.with_system(enemy::monitor_health)
 			)
@@ -94,6 +98,7 @@ impl Plugin for TowerDefensePlugin {
 			.add_system_set(
 				SystemSet::new()
 					.label(SimulationStepLabel::Reward)
+					.with_system(enemy::process_enemy_death)
 					.with_system(towers::handle_tower_level_up)
 					.with_system(exp_level::process_experience_gain)
 					.with_system(exp_level::process_level_ups)
@@ -103,6 +108,7 @@ impl Plugin for TowerDefensePlugin {
 					.label(SimulationStepLabel::Cleanup)
 					.after(SimulationStepLabel::Reward)
 					.with_system(exp_level::update_exp_bus)
+					.with_system(Events::<EventEnemyDeath>::update_system)
 			)
 			.add_system(ui::update_wave_text);
 	}

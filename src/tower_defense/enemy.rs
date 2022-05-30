@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::{prelude::*, ecs::event::Events};
 
 use crate::{tower_defense::map, pid_controller::{PidControlledPosition, self, PidControlled}};
 
@@ -126,6 +126,7 @@ pub(crate) fn move_enemies_with_pid(
 
 pub(crate) fn monitor_health(
 	time: Res<Time>,
+	mut enemy_deaths: ResMut<Events<EventEnemyDeath>>,
 	mut commands: Commands,
 	mut query: Query<(Entity, &Enemy, &Handle<StandardMaterial>, &mut Transform), With<Enemy>>,
 	mut materials: ResMut<Assets<StandardMaterial>>
@@ -133,6 +134,10 @@ pub(crate) fn monitor_health(
 	for (entity, enemy, material_handle, mut transform) in query.iter_mut() {
 		if enemy.health <= 0 {
 			commands.entity(entity).despawn();
+			info!("creating enemy death event");
+			enemy_deaths.send(EventEnemyDeath {
+				enemy: entity,
+			});
 			continue;
 		}
 		let mat = materials.get_mut(material_handle).expect("no material found");
@@ -143,5 +148,18 @@ pub(crate) fn monitor_health(
 		let lerp_amount = (time.delta_seconds() * lerp_speed).clamp(0., 1.);
 		mat.base_color = Color::from(Vec4::from(mat.base_color).lerp(Vec4::from(target_color), lerp_amount));
 		transform.scale = transform.scale.lerp(target_scale, lerp_amount);
+	}
+}
+
+#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
+pub struct EventEnemyDeath {
+	pub enemy: Entity,
+}
+
+pub fn process_enemy_death(
+	mut enemy_deaths: ResMut<Events<EventEnemyDeath>>,
+) {
+	for event in enemy_deaths.drain() {
+		info!("Enemy died");
 	}
 }
