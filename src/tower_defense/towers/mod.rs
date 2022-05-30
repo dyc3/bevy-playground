@@ -4,7 +4,7 @@ use bevy::prelude::*;
 
 use crate::{tower_defense::enemy, pid_controller::PidControlled};
 
-use self::laser::{TowerLaser, TowerLaserLock};
+use self::{laser::{TowerLaser, TowerLaserLock}, projectile::TowerProjectile};
 
 use super::exp_level::{ExpLevel, ExperienceBus, EventExpGain};
 
@@ -165,11 +165,7 @@ pub fn operate_towers(
 							});
 					},
 					TowerAttackType::Projectile => {
-						let proj = projectile::TowerProjectile {
-							damage: 15,
-							speed: 10.,
-							target: *enemy_entity,
-						};
+						let proj = TowerProjectile::new(15, 10., *enemy_entity);
 						proj.spawn(transform.translation, transform.rotation, &mut commands, &mut meshes, &mut materials);
 					},
 				}

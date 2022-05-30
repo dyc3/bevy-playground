@@ -9,9 +9,20 @@ pub struct TowerProjectile {
 	pub damage: u32,
 	pub speed: f32,
 	pub target: Entity,
+
+	last_pos: Option<Vec3>,
 }
 
 impl TowerProjectile {
+	pub fn new(damage: u32, speed: f32, target: Entity) -> Self {
+		Self {
+			damage,
+			speed,
+			target,
+			last_pos: Default::default()
+		}
+	}
+
 	pub fn spawn(
 		self,
 		pos: Vec3,
@@ -41,25 +52,29 @@ impl TowerProjectile {
 
 pub fn move_projectiles(
 	time: Res<Time>,
-	mut projectiles: Query<(&TowerProjectile, &mut Transform)>,
+	mut projectiles: Query<(&mut TowerProjectile, &mut Transform)>,
 	objects: Query<&Transform, Without<TowerProjectile>>,
 ) {
-	for (projectile, mut transform) in projectiles.iter_mut() {
+	for (mut projectile, mut transform) in projectiles.iter_mut() {
 		let result = objects.get(projectile.target);
 		if result.is_err() {
 			continue;
 		}
 		let target = result.unwrap();
 
-		let up = Vec3::new(0.0, 1.0, 0.0);
-		let forward = Vec3::normalize(transform.translation - target.translation);
-		let right = up.cross(forward).normalize();
-		let up = forward.cross(right);
-		let look_at = Quat::from_mat3(&Mat3::from_cols(right, up, forward));
+		let current_velocity = if let Some(last_pos) = projectile.last_pos {
+			last_pos - transform.translation
+		} else {
+			Vec3::new(0.0, 0.0, 0.0)
+		};
+		let desired_velocity = (target.translation - transform.translation).normalize() * projectile.speed;
+		let steering = desired_velocity - current_velocity;
 
-		transform.rotation = transform.rotation.slerp(look_at, 4. * time.delta().as_secs_f32());
-		let move_delta = transform.forward() * projectile.speed * time.delta().as_secs_f32();
-		transform.translation += move_delta;
+		let new_velocity = current_velocity + steering;
+		let new_pos = transform.translation + new_velocity * time.delta().as_secs_f32();
+		transform.translation = new_pos;
+
+		projectile.last_pos = Some(transform.translation);
 	}
 }
 
