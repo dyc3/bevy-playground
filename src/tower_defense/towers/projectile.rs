@@ -65,8 +65,25 @@ pub fn move_projectiles(
 
 pub fn projectile_collisions(
 	mut commands: Commands,
-	mut projectiles: Query<(Entity, &mut TowerProjectile, &Transform)>,
+	mut projectiles: Query<(Entity, &TowerProjectile, &Transform)>,
 	mut enemies: Query<(Entity, &mut Enemy, &Transform), Without<TowerProjectile>>,
+) {
+	for (entity, mut projectile, transform) in projectiles.iter_mut() {
+		// check the projectile is close enough to ANY enemy
+		for (enemy_entity, mut enemy, enemy_transform) in enemies.iter_mut() {
+			if transform.translation.distance(enemy_transform.translation) < 0.5 {
+				commands.entity(entity).despawn();
+				enemy.hurt(projectile.damage);
+				break;
+			}
+		}
+	}
+}
+
+pub fn retarget_projectiles(
+	mut commands: Commands,
+	mut projectiles: Query<(Entity, &mut TowerProjectile, &Transform)>,
+	mut enemies: Query<(Entity, &Transform), (With<Enemy>, Without<TowerProjectile>)>,
 ) {
 	for (entity, mut projectile, transform) in projectiles.iter_mut() {
 		let result = enemies.get_mut(projectile.target);
@@ -74,19 +91,13 @@ pub fn projectile_collisions(
 			// retarget if there are more enemies
 			if enemies.iter().count() > 0 {
 				projectile.target = enemies.iter().min_by(|x, y| {
-					let x_dist = (x.2.translation - transform.translation).length();
-					let y_dist = (y.2.translation - transform.translation).length();
+					let x_dist = (x.1.translation - transform.translation).length();
+					let y_dist = (y.1.translation - transform.translation).length();
 					x_dist.partial_cmp(&y_dist).unwrap_or_else(|| Ordering::Equal)
 				}).unwrap().0;
 			} else {
 				commands.entity(entity).despawn();
 			}
-			continue;
-		}
-		let (enemy_entity, mut enemy, enemy_transform) = result.unwrap();
-		if transform.translation.distance(enemy_transform.translation) < 0.5 {
-			commands.entity(entity).despawn();
-			enemy.hurt(projectile.damage);
 		}
 	}
 }

@@ -99,6 +99,7 @@ impl Plugin for TowerDefensePlugin {
 			)
 			.add_system(towers::projectile::move_projectiles)
 			.add_system(towers::projectile::projectile_collisions)
+			.add_system(towers::projectile::retarget_projectiles)
 			.add_system_set(
 				SystemSet::new()
 					.label(SimulationStepLabel::Reward)
