@@ -134,7 +134,6 @@ pub(crate) fn monitor_health(
 	for (entity, enemy, material_handle, mut transform) in query.iter_mut() {
 		if enemy.health <= 0 {
 			commands.entity(entity).despawn();
-			info!("creating enemy death event");
 			enemy_deaths.send(EventEnemyDeath {
 				enemy: entity,
 			});
@@ -160,6 +159,6 @@ pub fn process_enemy_death(
 	mut enemy_deaths: ResMut<Events<EventEnemyDeath>>,
 ) {
 	for event in enemy_deaths.drain() {
-		info!("Enemy died");
+		debug!("Enemy died");
 	}
 }
