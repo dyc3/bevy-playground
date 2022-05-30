@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 use bevy::ecs::event::Events;
 
+mod player;
 mod towers;
 mod enemy;
 mod exp_level;
@@ -13,6 +14,7 @@ use crate::pid_controller::{self, PidControlled};
 
 use self::enemy::{EnemyCreateOptions, EventEnemyDeath};
 use self::exp_level::{ExperienceBus, ExpLevel};
+use player::Player;
 
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq, SystemLabel)]
 enum SimulationStepLabel {
@@ -73,6 +75,7 @@ impl Plugin for TowerDefensePlugin {
 			.add_startup_system(add_lights)
 			.add_startup_system(add_path)
 			.add_startup_system(add_towers)
+			.add_startup_system(add_player)
 			.add_startup_system(ui::setup_ui)
 			.add_system(pid_controller::system_pid_controller_position)
 			.add_system(waves::spawn_enemies_from_waves)
@@ -110,7 +113,8 @@ impl Plugin for TowerDefensePlugin {
 					.with_system(exp_level::update_exp_bus)
 					.with_system(Events::<EventEnemyDeath>::update_system)
 			)
-			.add_system(ui::update_wave_text);
+			.add_system(ui::update_wave_text)
+			.add_system(ui::update_money_text);
 	}
 }
 
@@ -237,4 +241,12 @@ fn add_towers(
 			.insert(tower)
 			.insert(ExpLevel::new());
 	}
+}
+
+fn add_player(
+	mut commands: Commands,
+) {
+	commands.spawn()
+		.insert(Player::new())
+		.insert(ExpLevel::new());
 }

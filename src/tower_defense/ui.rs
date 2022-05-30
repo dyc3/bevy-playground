@@ -1,9 +1,12 @@
 use bevy::prelude::*;
 
-use super::waves::WaveStatus;
+use super::{waves::WaveStatus, player::Player};
 
 #[derive(Component)]
 pub(crate) struct WaveText;
+
+#[derive(Component)]
+pub struct PlayerMoneyText;
 
 pub(crate) fn setup_ui(mut commands: Commands, asset_server: Res<AssetServer>) {
 	commands.spawn_bundle(UiCameraBundle::default());
@@ -39,6 +42,39 @@ pub(crate) fn setup_ui(mut commands: Commands, asset_server: Res<AssetServer>) {
 			..TextBundle::default()
 		})
 		.insert(WaveText);
+
+	commands
+		.spawn_bundle(TextBundle {
+			style: Style {
+				align_self: AlignSelf::FlexEnd,
+				..Style::default()
+			},
+			// Use `Text` directly
+			text: Text {
+				// Construct a `Vec` of `TextSection`s
+				sections: vec![
+					TextSection {
+						value: "Money: ".to_string(),
+						style: TextStyle {
+							font: asset_server.load("fonts/Hack-Regular.ttf"),
+							font_size: 40.0,
+							color: Color::WHITE,
+						},
+					},
+					TextSection {
+						value: "".to_string(),
+						style: TextStyle {
+							font: asset_server.load("fonts/Hack-Regular.ttf"),
+							font_size: 40.0,
+							color: Color::WHITE,
+						},
+					},
+				],
+				..Text::default()
+			},
+			..TextBundle::default()
+		})
+		.insert(PlayerMoneyText);
 }
 
 pub(crate) fn update_wave_text(wave_manager: Res<super::waves::WaveManager>, mut query: Query<&mut Text, With<WaveText>>) {
@@ -59,5 +95,15 @@ pub(crate) fn update_wave_text(wave_manager: Res<super::waves::WaveManager>, mut
 				text.sections[1].style.color = Color::GREEN;
 			}
 		}
+	}
+}
+
+pub(crate) fn update_money_text(
+	player: Query<&Player>,
+	mut query: Query<&mut Text, With<PlayerMoneyText>>
+) {
+	let player = player.single();
+	for mut text in query.iter_mut() {
+		text.sections[1].value = format!("{}", player.money());
 	}
 }

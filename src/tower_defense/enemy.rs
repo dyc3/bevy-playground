@@ -2,6 +2,8 @@ use bevy::{prelude::*, ecs::event::Events};
 
 use crate::{tower_defense::map, pid_controller::{PidControlledPosition, self, PidControlled}};
 
+use super::player::Player;
+
 pub const PID_CONTROL_POSITION: u64 = 0;
 
 #[derive(Debug, Clone, Copy)]
@@ -157,8 +159,11 @@ pub struct EventEnemyDeath {
 
 pub fn process_enemy_death(
 	mut enemy_deaths: ResMut<Events<EventEnemyDeath>>,
+	mut player: Query<&mut Player>,
 ) {
+	let mut player = player.single_mut();
 	for event in enemy_deaths.drain() {
 		debug!("Enemy died");
+		player.add_money(1);
 	}
 }
