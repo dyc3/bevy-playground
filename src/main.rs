@@ -4,6 +4,7 @@ use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin};
 mod hello;
 mod tower_defense;
 mod pid_controller;
+mod camera;
 
 fn main() {
     App::new()

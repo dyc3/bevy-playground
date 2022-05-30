@@ -9,6 +9,7 @@ mod map;
 mod ui;
 mod waves;
 
+use crate::camera::{self, PanOrbitCamera};
 use crate::tower_defense::waves::{Wave, WaveManager, WaveStage};
 use crate::pid_controller::{self, PidControlled};
 
@@ -114,13 +115,17 @@ impl Plugin for TowerDefensePlugin {
 					.with_system(Events::<EventEnemyDeath>::update_system)
 			)
 			.add_system(ui::update_wave_text)
-			.add_system(ui::update_money_text);
+			.add_system(ui::update_money_text)
+			.add_system(camera::pan_orbit_camera);
 	}
 }
 
 fn add_camera(mut commands: Commands) {
 	commands.spawn_bundle(PerspectiveCameraBundle {
 		transform: Transform::from_xyz(0.0, 0.0, 20.0),
+		..Default::default()
+	}).insert(PanOrbitCamera {
+		radius: 20.0,
 		..Default::default()
 	});
 }
