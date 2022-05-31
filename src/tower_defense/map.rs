@@ -84,6 +84,29 @@ impl Path {
 	}
 }
 
+#[derive(Component, Debug, Clone)]
+pub struct PathVisualizer {
+	pub path_id: u64,
+	pub node_start: usize,
+	pub node_end: usize,
+	pub offset: f32,
+}
+
+pub fn visualize_path(
+	time: Res<Time>,
+	paths: Query<&Path>,
+	mut visuals: Query<(&PathVisualizer, &mut Transform)>,
+) {
+	for (marker, mut marker_transform) in visuals.iter_mut() {
+		let path = paths.iter()
+			.find(|path| path.id == marker.path_id)
+			.expect(format!("No path with id: {}", marker.path_id).as_str());
+		let pos_start = path.points()[marker.node_start];
+		let pos_end = path.points()[marker.node_end];
+		marker_transform.translation = pos_start.lerp(pos_end, ((time.time_since_startup().as_secs_f32() / 10.) + marker.offset) % 1.0);
+	}
+}
+
 #[test]
 fn test_total_length() {
 	let path = Path::new(

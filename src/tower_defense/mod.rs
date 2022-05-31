@@ -96,6 +96,7 @@ impl Plugin for TowerDefensePlugin {
 					.with_system(towers::laser::aim_lasers)
 					.with_system(towers::laser::update_laser_locks)
 					.with_system(towers::laser::clean_up_expired_lasers)
+					.with_system(map::visualize_path)
 			)
 			.add_system(towers::projectile::move_projectiles)
 			.add_system(towers::projectile::projectile_collisions)
@@ -206,6 +207,35 @@ fn add_path(
 			}
 		);
 	}
+	let visualizers = 5;
+	for i in 0..path.points().len() - 1 {
+		for j in 0..visualizers {
+			let mesh = meshes.add(Mesh::from(shape::UVSphere {
+				radius: 0.05,
+				sectors: 10,
+				stacks: 10,
+			}));
+			let material = materials.add(StandardMaterial {
+				base_color: Color::WHITE,
+				metallic: 1.,
+				perceptual_roughness: 0.5,
+				..Default::default()
+			});
+			commands.spawn_bundle(
+				PbrBundle {
+					mesh: mesh,
+					material: material,
+					..Default::default()
+				}
+			).insert(map::PathVisualizer {
+				path_id: path.id,
+				node_start: i,
+				node_end: i + 1,
+				offset: j as f32 / visualizers as f32,
+			});
+		}
+	}
+
 	commands.spawn()
 		.insert(path);
 }
